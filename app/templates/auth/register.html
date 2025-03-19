@@ -9,34 +9,26 @@
                     <h3 class="mb-0"><i class="fas fa-user-plus me-2"></i>Create an Account</h3>
                 </div>
                 <div class="card-body">
+                    <!-- 
+                    The 'form' variable is an instance of the RegistrationForm class from app/forms.py
+                    It's passed to this template from the register route in the auth blueprint
+                    The form contains fields for student_id,first_name, last_name, 
+                    password, confirm_password, and a submit button
+                    -->
                     <form method="POST" action="">
                         {{ form.hidden_tag() }}
                         
                         <div class="mb-3">
-                            {{ form.student_id.label(class="form-label") }}
-                            {% if form.student_id.errors %}
-                                {{ form.student_id(class="form-control is-invalid") }}
+                            {{ form.net_id.label(class="form-label") }}
+                            {% if form.net_id.errors %}
+                                {{ form.net_id(class="form-control is-invalid") }}
                                 <div class="invalid-feedback">
-                                    {% for error in form.student_id.errors %}
+                                    {% for error in form.net_id.errors %}
                                         <span>{{ error }}</span>
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                {{ form.student_id(class="form-control", placeholder="Enter your Yale student ID") }}
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-3">
-                            {{ form.email.label(class="form-label") }}
-                            {% if form.email.errors %}
-                                {{ form.email(class="form-control is-invalid") }}
-                                <div class="invalid-feedback">
-                                    {% for error in form.email.errors %}
-                                        <span>{{ error }}</span>
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                                {{ form.email(class="form-control", placeholder="Enter your Yale email") }}
+                                {{ form.net_id(class="form-control", placeholder="Enter your Yale Net ID") }}
                             {% endif %}
                         </div>
                         

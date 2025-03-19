@@ -4,27 +4,22 @@ from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationE
 from app.models.user import User
 
 class RegistrationForm(FlaskForm):
-    student_id = StringField('Yale Student ID', validators=[DataRequired(), Length(min=2, max=20)])
-    email = StringField('Email', validators=[DataRequired(), Email()])
+    net_id = StringField('Yale Net ID', validators=[DataRequired(), Length(min=2, max=20)])
     first_name = StringField('First Name', validators=[DataRequired(), Length(min=2, max=50)])
     last_name = StringField('Last Name', validators=[DataRequired(), Length(min=2, max=50)])
     password = PasswordField('Password', validators=[DataRequired()])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Sign Up')
 
-    def validate_student_id(self, student_id):
-        user = User.query.filter_by(student_id=student_id.data).first()
+    def validate_net_id(self, net_id):
+        user = User.query.filter_by(net_id=net_id.data).first()
         if user:
-            raise ValidationError('That student ID is already registered. Please use a different one.')
+            raise ValidationError('That net ID is already registered. Please use a different one.')
 
-    def validate_email(self, email):
-        user = User.query.filter_by(email=email.data).first()
-        if user:
-            raise ValidationError('That email is already registered. Please use a different one.')
 
 
 class LoginForm(FlaskForm):
-    student_id = StringField('Yale Student ID', validators=[DataRequired()])
+    net_id = StringField('Yale Net ID', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
     remember = BooleanField('Remember Me')
     submit = SubmitField('Login')

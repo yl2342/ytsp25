@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, timezone
+import zoneinfo
 from flask_login import UserMixin
 from app import db, login_manager, bcrypt
 from sqlalchemy.sql import func
@@ -11,14 +12,13 @@ followers = db.Table('followers',
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.String(20), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
+    net_id = db.Column(db.String(20), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
     balance = db.Column(db.Float, default=0.0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    last_login = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(zoneinfo.ZoneInfo("America/New_York")))
+    last_login = db.Column(db.DateTime, default=datetime.now(zoneinfo.ZoneInfo("America/New_York")))
     is_active = db.Column(db.Boolean, default=True)
     
     # Portfolio holdings
@@ -41,9 +41,8 @@ class User(db.Model, UserMixin):
         backref=db.backref('followers', lazy='dynamic'), lazy='dynamic'
     )
     
-    def __init__(self, student_id, email, password, first_name, last_name):
-        self.student_id = student_id
-        self.email = email
+    def __init__(self, net_id, password, first_name, last_name):
+        self.net_id = net_id
         self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
         self.first_name = first_name
         self.last_name = last_name
@@ -97,7 +96,7 @@ class User(db.Model, UserMixin):
         return total_value
     
     def __repr__(self):
-        return f"User('{self.student_id}', '{self.email}')"
+        return f"User('{self.net_id}')"
 
 
 @login_manager.user_loader

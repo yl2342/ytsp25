@@ -14,8 +14,7 @@ def register():
     form = RegistrationForm()
     if form.validate_on_submit():
         user = User(
-            student_id=form.student_id.data,
-            email=form.email.data,
+            net_id=form.net_id.data,
             password=form.password.data,  # This will be hashed in the __init__ method
             first_name=form.first_name.data,
             last_name=form.last_name.data
@@ -36,14 +35,14 @@ def login():
     
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(student_id=form.student_id.data).first()
+        user = User.query.filter_by(net_id=form.net_id.data).first()
         
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember.data)
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('main.dashboard'))
         else:
-            flash('Login failed. Please check your student ID and password.', 'danger')
+            flash('Login failed. Please check your Net ID and password.', 'danger')
     
     return render_template('auth/login.html', title='Login', form=form)
 

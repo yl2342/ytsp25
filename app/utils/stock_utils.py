@@ -140,15 +140,15 @@ def get_market_summary():
         dict: Dictionary with market index data
     """
     try:
-        # Major indices
-        indices = ["^DJI", "^GSPC", "^IXIC", "^RUT"]
-        names = ["Dow Jones", "S&P 500", "NASDAQ", "Russell 2000"]
+        # Use ETFs tracking these indices instead of direct index symbols
+        # DIA for Dow Jones, SPY for S&P 500, QQQ for NASDAQ, IWM for Russell 2000
+        indices = ["DIA", "SPY", "QQQ", "IWM"]
+        names = ["Dow Jones (DIA)", "S&P 500 (SPY)", "NASDAQ (QQQ)", "Russell 2000 (IWM)"]
         
         result = []
         
         for i, index in enumerate(indices):
             ticker = yf.Ticker(index)
-            info = ticker.info
             hist = ticker.history(period="2d")
             
             if not hist.empty and len(hist) >= 2:
