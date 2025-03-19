@@ -13,12 +13,12 @@
                     <div class="d-flex mb-3">
                         <div class="flex-shrink-0">
                             <img src="{{ url_for('static', filename='img/avatars/default.png') }}" 
-                                 alt="{{ post.user.first_name }}" class="rounded-circle" width="60" height="60">
+                                 alt="{{ post.author.first_name }}" class="rounded-circle" width="60" height="60">
                         </div>
                         <div class="ms-3">
                             <h2 class="h5 mb-0">
-                                <a href="{{ url_for('social.user_profile', user_id=post.user.id) }}" class="text-decoration-none">
-                                    {{ post.user.first_name }} {{ post.user.last_name }}
+                                <a href="{{ url_for('social.user_profile', user_id=post.author.id) }}" class="text-decoration-none">
+                                    {{ post.author.first_name }} {{ post.author.last_name }}
                                 </a>
                             </h2>
                             <div class="text-muted small">

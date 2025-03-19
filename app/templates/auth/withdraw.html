@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-6 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-secondary text-white">
+                    <h2 class="h4 mb-0"><i class="fas fa-minus-circle me-2"></i>Withdraw Funds</h2>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('auth.withdraw_funds') }}" class="needs-validation" novalidate>
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-4">
+                            <label for="current-balance" class="form-label">Current Balance</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-wallet"></i></span>
+                                <input type="text" class="form-control" id="current-balance" value="${{ current_user.balance|round(2) }}" disabled>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="amount" class="form-label">Amount to Withdraw</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                {{ form.amount(class="form-control", placeholder="Enter amount", min="0.01", step="0.01", max=current_user.balance) }}
+                            </div>
+                            {% if form.amount.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.amount.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Enter the amount you wish to withdraw from your account. You cannot withdraw more than your current balance.</div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-secondary">
+                                <i class="fas fa-minus-circle me-1"></i>{{ form.submit.label.text }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer bg-light small">
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle me-1"></i> This is a simulated trading platform. Withdrawals are not real monetary transactions.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

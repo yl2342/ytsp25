@@ -78,7 +78,7 @@ class User(db.Model, UserMixin):
         return self.followed.filter(followers.c.followed_id == user.id).count() > 0
     
     def followed_posts(self):
-        from app.models.trading_post import TradingPost
+        from app.models.social import TradingPost
         return TradingPost.query.join(
             followers, (followers.c.followed_id == TradingPost.user_id)
         ).filter(

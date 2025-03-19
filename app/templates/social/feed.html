@@ -20,12 +20,12 @@
                                     <div class="d-flex mb-3">
                                         <div class="flex-shrink-0">
                                             <img src="{{ url_for('static', filename='img/avatars/default.png') }}" 
-                                                 alt="{{ post.user.first_name }}" class="rounded-circle" width="50" height="50">
+                                                 alt="{{ post.author.first_name }}" class="rounded-circle" width="50" height="50">
                                         </div>
                                         <div class="ms-3">
                                             <h3 class="h6 mb-0">
-                                                <a href="{{ url_for('social.user_profile', user_id=post.user.id) }}" class="text-decoration-none">
-                                                    {{ post.user.first_name }} {{ post.user.last_name }}
+                                                <a href="{{ url_for('social.user_profile', user_id=post.author.id) }}" class="text-decoration-none">
+                                                    {{ post.author.first_name }} {{ post.author.last_name }}
                                                 </a>
                                             </h3>
                                             <div class="text-muted small">
@@ -143,12 +143,12 @@
                                     <div class="d-flex">
                                         <div class="flex-shrink-0">
                                             <img src="{{ url_for('static', filename='img/avatars/default.png') }}" 
-                                                 alt="{{ post.user.first_name }}" class="rounded-circle" width="40" height="40">
+                                                 alt="{{ post.author.first_name }}" class="rounded-circle" width="40" height="40">
                                         </div>
                                         <div class="ms-3">
                                             <div>
-                                                <a href="{{ url_for('social.user_profile', user_id=post.user.id) }}" class="fw-bold text-decoration-none">
-                                                    {{ post.user.first_name }} {{ post.user.last_name }}
+                                                <a href="{{ url_for('social.user_profile', user_id=post.author.id) }}" class="fw-bold text-decoration-none">
+                                                    {{ post.author.first_name }} {{ post.author.last_name }}
                                                 </a>
                                                 <span class="badge {% if post.transaction.action == 'buy' %}bg-success{% else %}bg-danger{% endif %} ms-1">
                                                     {{ post.transaction.action|upper }}
