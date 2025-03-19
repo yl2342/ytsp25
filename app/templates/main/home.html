@@ -1,0 +1,107 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row align-items-center">
+        <div class="col-md-6">
+            <h1 class="display-4 fw-bold mb-4">Yale Trading Simulation Platform</h1>
+            <p class="lead mb-4">
+                Learn investing, build your portfolio, and connect with fellow Yale traders in a safe, simulated environment.
+            </p>
+            <div class="mb-5">
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg me-2">
+                    <i class="fas fa-user-plus me-2"></i>Register Now
+                </a>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary btn-lg">
+                    <i class="fas fa-sign-in-alt me-2"></i>Log In
+                </a>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <img src="{{ url_for('static', filename='img/trading_illustration.svg') }}" 
+                 alt="Trading Illustration" class="img-fluid rounded shadow-lg">
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-12">
+            <h2 class="text-center mb-4">Market Overview</h2>
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="row">
+                        {% if market_indices %}
+                            {% for index in market_indices %}
+                                <div class="col-md-3 col-sm-6 mb-3">
+                                    <div class="d-flex flex-column align-items-center">
+                                        <h5>{{ index.name }}</h5>
+                                        <h3>{{ "%.2f"|format(index.price) }}</h3>
+                                        <span class="
+                                            {% if index.change > 0 %}text-success{% else %}text-danger{% endif %}
+                                        ">
+                                            {% if index.change > 0 %}
+                                                <i class="fas fa-caret-up"></i>
+                                            {% else %}
+                                                <i class="fas fa-caret-down"></i>
+                                            {% endif %}
+                                            {{ "%.2f"|format(index.change) }} ({{ "%.2f"|format(index.change_percent) }}%)
+                                        </span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="col-12 text-center">
+                                <p>Market data unavailable at the moment.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
+                    <h3>Simulate Trading</h3>
+                    <p>Buy and sell stocks with virtual money to learn investing strategies without financial risk.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-pie fa-3x text-primary mb-3"></i>
+                    <h3>Track Performance</h3>
+                    <p>Monitor your portfolio's performance and learn how to optimize your investment strategy.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                    <h3>Connect with Peers</h3>
+                    <p>Follow other traders, share insights, and learn from the Yale trading community.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5 mb-5">
+        <div class="col-12 text-center">
+            <h2 class="mb-4">Ready to start your investment journey?</h2>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">
+                Create Your Account
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // You can add additional JavaScript for the home page if needed
+</script>
+{% endblock %} 

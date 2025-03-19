@@ -1,0 +1,212 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Trading Post Card -->
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <!-- Post Header -->
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            <img src="{{ url_for('static', filename='img/avatars/default.png') }}" 
+                                 alt="{{ post.user.first_name }}" class="rounded-circle" width="60" height="60">
+                        </div>
+                        <div class="ms-3">
+                            <h2 class="h5 mb-0">
+                                <a href="{{ url_for('social.user_profile', user_id=post.user.id) }}" class="text-decoration-none">
+                                    {{ post.user.first_name }} {{ post.user.last_name }}
+                                </a>
+                            </h2>
+                            <div class="text-muted small">
+                                {{ post.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Post Content -->
+                    <div class="mb-4">
+                        <div class="alert {% if post.transaction.action == 'buy' %}alert-success{% else %}alert-danger{% endif %} mb-3">
+                            <div class="fw-bold">
+                                {{ post.transaction.action|upper }}ED {{ post.transaction.quantity|int }} 
+                                shares of {{ post.transaction.ticker }} @ ${{ post.transaction.price|round(2) }}
+                            </div>
+                            <div class="d-flex justify-content-between mt-2">
+                                <div>Total: ${{ (post.transaction.quantity * post.transaction.price)|round(2) }}</div>
+                                <div>{{ post.transaction.timestamp.strftime('%m/%d/%Y') }}</div>
+                            </div>
+                        </div>
+                        
+                        {% if post.content %}
+                            <p class="lead">{{ post.content }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Post Actions -->
+                    <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                        <div>
+                            <button class="btn btn-outline-primary me-2" 
+                                    hx-post="{{ url_for('social.like_post', post_id=post.id) }}"
+                                    hx-swap="outerHTML"
+                                    hx-target="#post-likes-{{ post.id }}">
+                                <i class="far fa-thumbs-up me-1"></i> 
+                                <span id="post-likes-{{ post.id }}">{{ post.likes }}</span>
+                            </button>
+                            <button class="btn btn-outline-secondary" 
+                                    hx-post="{{ url_for('social.dislike_post', post_id=post.id) }}"
+                                    hx-swap="outerHTML"
+                                    hx-target="#post-dislikes-{{ post.id }}">
+                                <i class="far fa-thumbs-down me-1"></i> 
+                                <span id="post-dislikes-{{ post.id }}">{{ post.dislikes }}</span>
+                            </button>
+                        </div>
+                        <a href="{{ url_for('trading.stock_detail', ticker=post.transaction.ticker) }}" class="btn btn-primary">
+                            <i class="fas fa-chart-line me-1"></i> View {{ post.transaction.ticker }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Comment Form -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-light">
+                    <h3 class="h5 mb-0">Add a Comment</h3>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('social.add_comment', post_id=post.id) }}" method="post">
+                        {{ comment_form.hidden_tag() }}
+                        <div class="mb-3">
+                            {{ comment_form.content(class="form-control", rows=3, placeholder="Share your thoughts...") }}
+                            {% if comment_form.content.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in comment_form.content.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Post Comment</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Comments Section -->
+            <div class="card shadow">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h3 class="h5 mb-0">Comments ({{ comments|length }})</h3>
+                </div>
+                <div class="card-body">
+                    {% if comments %}
+                        <div class="comment-list">
+                            {% for comment in comments %}
+                                <div class="comment mb-4" id="comment-{{ comment.id }}">
+                                    <!-- Comment Header -->
+                                    <div class="d-flex">
+                                        <div class="flex-shrink-0">
+                                            <img src="{{ url_for('static', filename='img/avatars/default.png') }}" 
+                                                 alt="{{ comment.user.first_name }}" class="rounded-circle" width="40" height="40">
+                                        </div>
+                                        <div class="ms-3 flex-grow-1">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <h4 class="h6 mb-0">
+                                                    <a href="{{ url_for('social.user_profile', user_id=comment.user.id) }}" class="text-decoration-none">
+                                                        {{ comment.user.first_name }} {{ comment.user.last_name }}
+                                                    </a>
+                                                </h4>
+                                                <small class="text-muted">
+                                                    {{ comment.created_at.strftime('%b %d, %Y %I:%M %p') }}
+                                                </small>
+                                            </div>
+                                            
+                                            <!-- Comment Content -->
+                                            <div class="mt-2 mb-2">
+                                                {{ comment.content }}
+                                            </div>
+                                            
+                                            <!-- Comment Actions -->
+                                            <div class="d-flex align-items-center">
+                                                <button class="btn btn-link btn-sm text-decoration-none p-0" 
+                                                        onclick="toggleReplyForm('{{ comment.id }}')">
+                                                    <i class="far fa-comment me-1"></i> Reply
+                                                </button>
+                                            </div>
+                                            
+                                            <!-- Reply Form (hidden by default) -->
+                                            <div class="reply-form mt-2 d-none" id="reply-form-{{ comment.id }}">
+                                                <form action="{{ url_for('social.reply_to_comment', comment_id=comment.id) }}" method="post">
+                                                    {{ reply_form.hidden_tag() }}
+                                                    <div class="input-group">
+                                                        {{ reply_form.content(class="form-control", placeholder="Write a reply...") }}
+                                                        <button type="submit" class="btn btn-primary">Reply</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                            
+                                            <!-- Replies -->
+                                            {% if comment.replies %}
+                                                <div class="replies mt-3">
+                                                    {% for reply in comment.replies %}
+                                                        <div class="reply mt-3">
+                                                            <div class="d-flex">
+                                                                <div class="flex-shrink-0">
+                                                                    <img src="{{ url_for('static', filename='img/avatars/default.png') }}" 
+                                                                         alt="{{ reply.user.first_name }}" class="rounded-circle" width="32" height="32">
+                                                                </div>
+                                                                <div class="ms-2">
+                                                                    <div class="d-flex align-items-center">
+                                                                        <h5 class="h6 mb-0">
+                                                                            <a href="{{ url_for('social.user_profile', user_id=reply.user.id) }}" class="text-decoration-none">
+                                                                                {{ reply.user.first_name }} {{ reply.user.last_name }}
+                                                                            </a>
+                                                                        </h5>
+                                                                        <small class="text-muted ms-2">
+                                                                            {{ reply.created_at.strftime('%b %d, %Y') }}
+                                                                        </small>
+                                                                    </div>
+                                                                    <div class="mt-1">
+                                                                        {{ reply.content }}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center p-4">
+                            <i class="far fa-comment-dots fa-3x text-muted mb-3"></i>
+                            <p>No comments yet. Be the first to comment on this trading post!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://unpkg.com/htmx.org@1.7.0"></script>
+<script>
+    function toggleReplyForm(commentId) {
+        const replyForm = document.getElementById(`reply-form-${commentId}`);
+        replyForm.classList.toggle('d-none');
+        
+        // Focus the input if showing the form
+        if (!replyForm.classList.contains('d-none')) {
+            replyForm.querySelector('input').focus();
+        }
+    }
+</script>
+{% endblock %} 

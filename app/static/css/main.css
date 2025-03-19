@@ -1,0 +1,218 @@
+/* Main Styling for Yale Trading Simulation Platform */
+
+/* Global styles */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #f8f9fa;
+}
+
+main {
+    flex: 1;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+}
+
+.text-yale-blue {
+    color: #0f4d92 !important;
+}
+
+.bg-yale-blue {
+    background-color: #0f4d92 !important;
+}
+
+/* Override Bootstrap's primary color to match Yale blue */
+.bg-primary {
+    background-color: #0f4d92 !important;
+}
+
+/* Additional overrides for consistency */
+.text-primary {
+    color: #0f4d92 !important;
+}
+
+.border-primary {
+    border-color: #0f4d92 !important;
+}
+
+/* Alert primary */
+.alert-primary {
+    background-color: rgba(15, 77, 146, 0.15);
+    border-color: rgba(15, 77, 146, 0.3);
+    color: #0a3d75;
+}
+
+/* List group item primary */
+.list-group-item-primary {
+    background-color: rgba(15, 77, 146, 0.15);
+    color: #0a3d75;
+}
+
+/* Link color */
+a {
+    color: #0f4d92;
+}
+
+a:hover {
+    color: #0a3d75;
+}
+
+/* Card styling */
+.card {
+    border-radius: 0.5rem;
+    overflow: hidden;
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    font-weight: 600;
+}
+
+/* Button styling */
+.btn {
+    border-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background-color: #0f4d92;
+    border-color: #0f4d92;
+}
+
+.btn-primary:hover, .btn-primary:focus {
+    background-color: #0b3d73;
+    border-color: #0b3d73;
+}
+
+.btn-outline-primary {
+    color: #0f4d92;
+    border-color: #0f4d92;
+}
+
+.btn-outline-primary:hover {
+    background-color: #0f4d92;
+    border-color: #0f4d92;
+}
+
+/* Navbar styling */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+/* Stock price movement indicators */
+.price-up {
+    color: #28a745;
+}
+
+.price-down {
+    color: #dc3545;
+}
+
+/* Forms */
+.form-control:focus {
+    border-color: #0f4d92;
+    box-shadow: 0 0 0 0.25rem rgba(15, 77, 146, 0.25);
+}
+
+/* Stock details page */
+.stock-chart {
+    height: 300px;
+    width: 100%;
+}
+
+.stock-info-card {
+    height: 100%;
+}
+
+/* Portfolio page */
+.portfolio-stat {
+    text-align: center;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background-color: #fff;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.portfolio-value {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+/* Social feed */
+.post-card {
+    margin-bottom: 1rem;
+}
+
+.post-user-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.post-user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+    background-color: #0f4d92;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.comment-section {
+    margin-top: 1rem;
+    border-top: 1px solid #dee2e6;
+    padding-top: 1rem;
+}
+
+.comment {
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+}
+
+/* Dashboard */
+.market-index-card {
+    text-align: center;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background-color: #fff;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1rem;
+}
+
+.index-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .portfolio-value, .index-value {
+        font-size: 1.5rem;
+    }
+    
+    .stock-chart {
+        height: 200px;
+    }
+} 

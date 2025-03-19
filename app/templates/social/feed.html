@@ -1,0 +1,237 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Main Feed -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 mb-0"><i class="fas fa-stream me-2"></i>Your Feed</h2>
+                </div>
+                <div class="card-body p-0">
+                    {% if followed_posts %}
+                        <div class="list-group list-group-flush">
+                            {% for post in followed_posts %}
+                                <div class="list-group-item p-4">
+                                    <!-- Post Header -->
+                                    <div class="d-flex mb-3">
+                                        <div class="flex-shrink-0">
+                                            <img src="{{ url_for('static', filename='img/avatars/default.png') }}" 
+                                                 alt="{{ post.user.first_name }}" class="rounded-circle" width="50" height="50">
+                                        </div>
+                                        <div class="ms-3">
+                                            <h3 class="h6 mb-0">
+                                                <a href="{{ url_for('social.user_profile', user_id=post.user.id) }}" class="text-decoration-none">
+                                                    {{ post.user.first_name }} {{ post.user.last_name }}
+                                                </a>
+                                            </h3>
+                                            <div class="text-muted small">
+                                                {{ post.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Post Content -->
+                                    <div class="mb-3">
+                                        <div class="alert {% if post.transaction.action == 'buy' %}alert-success{% else %}alert-danger{% endif %} mb-3">
+                                            <div class="fw-bold">
+                                                {{ post.transaction.action|upper }}ED {{ post.transaction.quantity|int }} 
+                                                shares of {{ post.transaction.ticker }} @ ${{ post.transaction.price|round(2) }}
+                                            </div>
+                                            <div class="d-flex justify-content-between mt-2">
+                                                <div>Total: ${{ (post.transaction.quantity * post.transaction.price)|round(2) }}</div>
+                                                <div>{{ post.transaction.timestamp.strftime('%m/%d/%Y') }}</div>
+                                            </div>
+                                        </div>
+                                        
+                                        {% if post.content %}
+                                            <p>{{ post.content }}</p>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <!-- Post Actions -->
+                                    <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                                        <div>
+                                            <button class="btn btn-sm btn-outline-primary me-2" 
+                                                    hx-post="{{ url_for('social.like_post', post_id=post.id) }}"
+                                                    hx-swap="outerHTML"
+                                                    hx-target="#post-likes-{{ post.id }}">
+                                                <i class="far fa-thumbs-up me-1"></i> 
+                                                <span id="post-likes-{{ post.id }}">{{ post.likes }}</span>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary" 
+                                                    hx-post="{{ url_for('social.dislike_post', post_id=post.id) }}"
+                                                    hx-swap="outerHTML"
+                                                    hx-target="#post-dislikes-{{ post.id }}">
+                                                <i class="far fa-thumbs-down me-1"></i> 
+                                                <span id="post-dislikes-{{ post.id }}">{{ post.dislikes }}</span>
+                                            </button>
+                                        </div>
+                                        <div>
+                                            <a href="{{ url_for('social.view_post', post_id=post.id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="far fa-comment me-1"></i> Comments ({{ post.comments|length }})
+                                            </a>
+                                            <a href="{{ url_for('trading.stock_detail', ticker=post.transaction.ticker) }}" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-chart-line me-1"></i> View Stock
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="p-4 text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-users fa-3x text-muted"></i>
+                            </div>
+                            <h3 class="h5">Your feed is empty</h3>
+                            <p>Follow other Yale traders to see their activities in your feed.</p>
+                            <a href="{{ url_for('social.search_users') }}" class="btn btn-primary">
+                                <i class="fas fa-search me-1"></i> Find Yale Traders
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Profile Card -->
+            <div class="card shadow mb-4">
+                <div class="card-body text-center">
+                    <img src="{{ url_for('static', filename='img/avatars/default.png') }}" 
+                         alt="{{ current_user.first_name }}" class="rounded-circle mb-3" width="100" height="100">
+                    <h3 class="h5 mb-1">{{ current_user.first_name }} {{ current_user.last_name }}</h3>
+                    <div class="text-muted small mb-3">{{ current_user.student_id }}</div>
+                    
+                    <div class="d-flex justify-content-center gap-3 mb-3">
+                        <a href="{{ url_for('social.following') }}" class="text-decoration-none text-center">
+                            <div class="fw-bold">{{ current_user.followed.count() }}</div>
+                            <div class="small text-muted">Following</div>
+                        </a>
+                        <div class="vr mx-2"></div>
+                        <a href="{{ url_for('social.followers') }}" class="text-decoration-none text-center">
+                            <div class="fw-bold">{{ current_user.followers.count() }}</div>
+                            <div class="small text-muted">Followers</div>
+                        </a>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('social.my_posts') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-history me-1"></i> My Trading Posts
+                        </a>
+                        <a href="{{ url_for('social.search_users') }}" class="btn btn-primary">
+                            <i class="fas fa-search me-1"></i> Find Yale Traders
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Popular Posts -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-light">
+                    <h3 class="h5 mb-0">Popular on YaleTrade</h3>
+                </div>
+                <div class="card-body p-0">
+                    {% if popular_posts %}
+                        <div class="list-group list-group-flush">
+                            {% for post in popular_posts %}
+                                <div class="list-group-item p-3">
+                                    <div class="d-flex">
+                                        <div class="flex-shrink-0">
+                                            <img src="{{ url_for('static', filename='img/avatars/default.png') }}" 
+                                                 alt="{{ post.user.first_name }}" class="rounded-circle" width="40" height="40">
+                                        </div>
+                                        <div class="ms-3">
+                                            <div>
+                                                <a href="{{ url_for('social.user_profile', user_id=post.user.id) }}" class="fw-bold text-decoration-none">
+                                                    {{ post.user.first_name }} {{ post.user.last_name }}
+                                                </a>
+                                                <span class="badge {% if post.transaction.action == 'buy' %}bg-success{% else %}bg-danger{% endif %} ms-1">
+                                                    {{ post.transaction.action|upper }}
+                                                </span>
+                                            </div>
+                                            <div class="small mb-2">
+                                                {{ post.transaction.quantity|int }} shares of {{ post.transaction.ticker }}
+                                                @ ${{ post.transaction.price|round(2) }}
+                                            </div>
+                                            {% if post.content %}
+                                                <p class="small mb-1">{{ post.content|truncate(100) }}</p>
+                                            {% endif %}
+                                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                                <div class="text-muted small">{{ post.created_at.strftime('%b %d') }}</div>
+                                                <div>
+                                                    <span class="badge bg-light text-dark">
+                                                        <i class="far fa-thumbs-up me-1"></i> {{ post.likes }}
+                                                    </span>
+                                                    <a href="{{ url_for('social.view_post', post_id=post.id) }}" class="btn btn-sm btn-link">View</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="p-3 text-center text-muted">No popular posts yet</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Trending Stocks -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-light">
+                    <h3 class="h5 mb-0">Trending Stocks</h3>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <a href="{{ url_for('trading.stock_detail', ticker='AAPL') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3">
+                            <div>
+                                <div class="fw-bold">AAPL</div>
+                                <div class="small text-muted">Apple Inc.</div>
+                            </div>
+                            <div class="text-success">+2.5%</div>
+                        </a>
+                        <a href="{{ url_for('trading.stock_detail', ticker='MSFT') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3">
+                            <div>
+                                <div class="fw-bold">MSFT</div>
+                                <div class="small text-muted">Microsoft Corp.</div>
+                            </div>
+                            <div class="text-success">+1.8%</div>
+                        </a>
+                        <a href="{{ url_for('trading.stock_detail', ticker='GOOGL') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3">
+                            <div>
+                                <div class="fw-bold">GOOGL</div>
+                                <div class="small text-muted">Alphabet Inc.</div>
+                            </div>
+                            <div class="text-danger">-0.7%</div>
+                        </a>
+                        <a href="{{ url_for('trading.stock_detail', ticker='AMZN') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3">
+                            <div>
+                                <div class="fw-bold">AMZN</div>
+                                <div class="small text-muted">Amazon.com Inc.</div>
+                            </div>
+                            <div class="text-success">+3.2%</div>
+                        </a>
+                        <a href="{{ url_for('trading.stock_detail', ticker='META') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3">
+                            <div>
+                                <div class="fw-bold">META</div>
+                                <div class="small text-muted">Meta Platforms Inc.</div>
+                            </div>
+                            <div class="text-danger">-1.3%</div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://unpkg.com/htmx.org@1.7.0"></script>
+{% endblock %} 

@@ -1,0 +1,105 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h2 class="h4 mb-0"><i class="fas fa-history me-2"></i>My Trading Posts</h2>
+                    <a href="{{ url_for('trading.stock_search') }}" class="btn btn-light btn-sm">
+                        <i class="fas fa-plus me-1"></i> New Trade
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if posts %}
+                        <div class="list-group list-group-flush">
+                            {% for post in posts %}
+                                <div class="list-group-item p-4">
+                                    <!-- Post Header -->
+                                    <div class="d-flex mb-3">
+                                        <div class="flex-shrink-0">
+                                            <img src="{{ url_for('static', filename='img/avatars/default.png') }}" 
+                                                 alt="{{ current_user.first_name }}" class="rounded-circle" width="50" height="50">
+                                        </div>
+                                        <div class="ms-3">
+                                            <h3 class="h6 mb-0">{{ current_user.first_name }} {{ current_user.last_name }}</h3>
+                                            <div class="text-muted small">
+                                                {{ post.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Post Content -->
+                                    <div class="mb-3">
+                                        <div class="alert {% if post.transaction.action == 'buy' %}alert-success{% else %}alert-danger{% endif %} mb-3">
+                                            <div class="fw-bold">
+                                                {{ post.transaction.action|upper }}ED {{ post.transaction.quantity|int }} 
+                                                shares of {{ post.transaction.ticker }} @ ${{ post.transaction.price|round(2) }}
+                                            </div>
+                                            <div class="d-flex justify-content-between mt-2">
+                                                <div>Total: ${{ (post.transaction.quantity * post.transaction.price)|round(2) }}</div>
+                                                <div>{{ post.transaction.timestamp.strftime('%m/%d/%Y') }}</div>
+                                            </div>
+                                        </div>
+                                        
+                                        {% if post.content %}
+                                            <p>{{ post.content }}</p>
+                                        {% endif %}
+
+                                        <!-- Post Visibility -->
+                                        <div class="mt-3">
+                                            <span class="badge {% if post.is_public %}bg-success{% else %}bg-secondary{% endif %}">
+                                                <i class="fas {% if post.is_public %}fa-globe{% else %}fa-lock{% endif %} me-1"></i>
+                                                {{ post.is_public and 'Public' or 'Private' }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Post Stats and Actions -->
+                                    <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                                        <div>
+                                            <span class="badge bg-light text-dark me-2">
+                                                <i class="far fa-thumbs-up me-1"></i> {{ post.likes }}
+                                            </span>
+                                            <span class="badge bg-light text-dark me-2">
+                                                <i class="far fa-thumbs-down me-1"></i> {{ post.dislikes }}
+                                            </span>
+                                            <span class="badge bg-light text-dark">
+                                                <i class="far fa-comment me-1"></i> {{ post.comments|length }}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <a href="{{ url_for('social.view_post', post_id=post.id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="far fa-eye me-1"></i> View Post
+                                            </a>
+                                            <a href="{{ url_for('trading.stock_detail', ticker=post.transaction.ticker) }}" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-chart-line me-1"></i> View Stock
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center p-5">
+                            <div class="mb-3">
+                                <i class="fas fa-chart-line fa-3x text-muted"></i>
+                            </div>
+                            <h3 class="h5">No trading posts yet</h3>
+                            <p class="text-muted">
+                                When you make trades and choose to share them, they'll appear here.
+                            </p>
+                            <a href="{{ url_for('trading.stock_search') }}" class="btn btn-primary">
+                                <i class="fas fa-search me-1"></i> Find Stocks to Trade
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

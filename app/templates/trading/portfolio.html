@@ -1,0 +1,329 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .chart-container {
+        height: 300px;
+        width: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Portfolio Summary -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 mb-0"><i class="fas fa-chart-pie me-2"></i>Portfolio Summary</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h3 class="h5 mb-3">Portfolio Value</h3>
+                            <div class="fs-1 fw-bold mb-2">${{ portfolio.total_value|round(2) }}</div>
+                            
+                            <div class="d-flex align-items-center">
+                                {% if portfolio.total_profit >= 0 %}
+                                <span class="badge bg-success me-2">
+                                    <i class="fas fa-arrow-up"></i>
+                                </span>
+                                <span class="text-success fw-bold">
+                                    +${{ portfolio.total_profit|round(2) }} ({{ portfolio.profit_percent|round(2) }}%)
+                                </span>
+                                {% else %}
+                                <span class="badge bg-danger me-2">
+                                    <i class="fas fa-arrow-down"></i>
+                                </span>
+                                <span class="text-danger fw-bold">
+                                    -${{ (portfolio.total_profit * -1)|round(2) }} ({{ (portfolio.profit_percent * -1)|round(2) }}%)
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="chart-container">
+                                <canvas id="portfolioChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Holdings Table -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-light">
+                    <h2 class="h5 mb-0">Your Holdings</h2>
+                </div>
+                <div class="card-body">
+                    {% if portfolio.holdings %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Stock</th>
+                                        <th>Shares</th>
+                                        <th>Avg. Cost</th>
+                                        <th>Current Price</th>
+                                        <th>Market Value</th>
+                                        <th>Profit/Loss</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for holding in portfolio.holdings %}
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold">{{ holding.ticker }}</div>
+                                            <div class="small text-muted">{{ holding.company_name }}</div>
+                                        </td>
+                                        <td>{{ holding.quantity|int }}</td>
+                                        <td>${{ holding.average_price|round(2) }}</td>
+                                        <td>${{ holding.current_price|round(2) }}</td>
+                                        <td>${{ holding.market_value|round(2) }}</td>
+                                        <td class="{% if holding.profit >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
+                                            {% if holding.profit >= 0 %}+{% endif %}${{ holding.profit|round(2) }}
+                                            <br>
+                                            <small>({{ holding.profit_percent|round(2) }}%)</small>
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('trading.stock_detail', ticker=holding.ticker) }}" class="btn btn-sm btn-outline-primary">Trade</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>You don't have any stock holdings yet.
+                            <a href="{{ url_for('trading.stock_search') }}" class="alert-link">Start trading now</a>!
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Transaction History -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-light">
+                    <h2 class="h5 mb-0">Transaction History</h2>
+                </div>
+                <div class="card-body">
+                    {% if transactions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Stock</th>
+                                        <th>Type</th>
+                                        <th>Shares</th>
+                                        <th>Price</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for transaction in transactions %}
+                                    <tr>
+                                        <td>{{ transaction.timestamp.strftime('%m/%d/%Y %H:%M') }}</td>
+                                        <td>
+                                            <a href="{{ url_for('trading.stock_detail', ticker=transaction.ticker) }}">
+                                                <div class="fw-bold">{{ transaction.ticker }}</div>
+                                                <div class="small text-muted">{{ transaction.company_name }}</div>
+                                            </a>
+                                        </td>
+                                        <td class="{% if transaction.action == 'buy' %}text-success{% else %}text-danger{% endif %} fw-bold">
+                                            {{ transaction.action|upper }}
+                                        </td>
+                                        <td>{{ transaction.quantity|int }}</td>
+                                        <td>${{ transaction.price|round(2) }}</td>
+                                        <td>${{ (transaction.quantity * transaction.price)|round(2) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>You haven't made any transactions yet.
+                            <a href="{{ url_for('trading.stock_search') }}" class="alert-link">Start trading now</a>!
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Account Balance -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-light">
+                    <h2 class="h5 mb-0">Account Balance</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="d-flex flex-column">
+                                <span class="text-muted mb-1">Cash Available</span>
+                                <span class="h4 mb-0">${{ portfolio.cash_balance|round(2) }}</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex flex-column">
+                                <span class="text-muted mb-1">Invested Amount</span>
+                                <span class="h4 mb-0">${{ portfolio.invested_amount|round(2) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Portfolio Stats -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-light">
+                    <h2 class="h5 mb-0">Portfolio Stats</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col">
+                            <div class="text-muted small">Total Value</div>
+                            <div class="fw-bold">${{ portfolio.total_value|round(2) }}</div>
+                        </div>
+                        <div class="col">
+                            <div class="text-muted small">Day Change</div>
+                            <div class="{% if portfolio.day_change >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
+                                {% if portfolio.day_change >= 0 %}+{% endif %}${{ portfolio.day_change|round(2) }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col">
+                            <div class="text-muted small">Total Return</div>
+                            <div class="{% if portfolio.total_profit >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
+                                {% if portfolio.total_profit >= 0 %}+{% endif %}${{ portfolio.total_profit|round(2) }}
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="text-muted small">Return %</div>
+                            <div class="{% if portfolio.profit_percent >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
+                                {% if portfolio.profit_percent >= 0 %}+{% endif %}{{ portfolio.profit_percent|round(2) }}%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <div class="text-muted small">Buying Power</div>
+                            <div class="fw-bold">${{ portfolio.cash_balance|round(2) }}</div>
+                        </div>
+                        <div class="col">
+                            <div class="text-muted small">Total Assets</div>
+                            <div class="fw-bold">${{ (portfolio.cash_balance + portfolio.total_value)|round(2) }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Activity -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-light">
+                    <h2 class="h5 mb-0">Recent Activity</h2>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for transaction in transactions[:5] %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold">
+                                        {{ transaction.action|title }}
+                                        {{ transaction.quantity|int }} {{ transaction.ticker }}
+                                    </div>
+                                    <div class="small text-muted">
+                                        {{ transaction.timestamp.strftime('%m/%d/%Y %H:%M') }}
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold">${{ (transaction.quantity * transaction.price)|round(2) }}</div>
+                                    <div class="small {% if transaction.action == 'buy' %}text-success{% else %}text-danger{% endif %}">
+                                        @ ${{ transaction.price|round(2) }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="list-group-item">
+                            <div class="text-muted text-center">No recent activity</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="card-footer bg-light">
+                    <a href="{{ url_for('trading.stock_search') }}" class="btn btn-primary btn-sm w-100">Find Stocks to Trade</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Portfolio allocation chart
+        const ctx = document.getElementById('portfolioChart').getContext('2d');
+        
+        // Parse portfolio data passed from Python
+        const portfolioDataStr = '{{ portfolio.holdings|tojson|safe }}';
+        const portfolioData = JSON.parse(portfolioDataStr);
+        
+        // Extract data for pie chart
+        const labels = portfolioData.map(item => item.ticker);
+        const values = portfolioData.map(item => item.market_value);
+        const backgroundColors = [
+            '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b',
+            '#5a5c69', '#6610f2', '#6f42c1', '#fd7e14', '#20c9a6'
+        ];
+        
+        // Create a pie chart
+        const portfolioChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: backgroundColors.slice(0, values.length),
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'right',
+                        labels: {
+                            boxWidth: 12
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${context.label}: $${value.toFixed(2)} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %} 

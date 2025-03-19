@@ -1,0 +1,134 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 mb-0"><i class="fas fa-search me-2"></i>Stock Search</h2>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('trading.stock_search') }}">
+                        {{ form.hidden_tag() }}
+                        <div class="input-group mb-3">
+                            {{ form.ticker(class="form-control", placeholder="Enter stock ticker or company name") }}
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                        </div>
+                        {% if form.ticker.errors %}
+                            <div class="text-danger small">
+                                {% for error in form.ticker.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </form>
+
+                    {% if searched %}
+                        <div class="mt-4">
+                            <h3 class="h5 border-bottom pb-2 mb-3">Search Results</h3>
+                            {% if results %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Ticker</th>
+                                                <th>Company</th>
+                                                <th>Price</th>
+                                                <th>Change</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for stock in results %}
+                                                <tr>
+                                                    <td class="fw-bold">{{ stock.ticker }}</td>
+                                                    <td>{{ stock.name }}</td>
+                                                    <td>${{ stock.current_price|round(2) }}</td>
+                                                    <td class="{% if stock.change_percent >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                        {% if stock.change_percent >= 0 %}+{% endif %}{{ stock.change_percent|round(2) }}%
+                                                    </td>
+                                                    <td>
+                                                        <a href="{{ url_for('trading.stock_detail', ticker=stock.ticker) }}" class="btn btn-sm btn-outline-primary">
+                                                            View Details
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>No stocks found matching your search criteria.
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 mt-4 mt-lg-0">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-light">
+                    <h3 class="h5 mb-0">Popular Stocks</h3>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <a href="{{ url_for('trading.stock_detail', ticker='AAPL') }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="fw-bold">AAPL</span>
+                                    <small class="text-muted d-block">Apple Inc.</small>
+                                </div>
+                                <i class="fas fa-chevron-right text-muted"></i>
+                            </div>
+                        </a>
+                        <a href="{{ url_for('trading.stock_detail', ticker='MSFT') }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="fw-bold">MSFT</span>
+                                    <small class="text-muted d-block">Microsoft Corp.</small>
+                                </div>
+                                <i class="fas fa-chevron-right text-muted"></i>
+                            </div>
+                        </a>
+                        <a href="{{ url_for('trading.stock_detail', ticker='AMZN') }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="fw-bold">AMZN</span>
+                                    <small class="text-muted d-block">Amazon.com Inc.</small>
+                                </div>
+                                <i class="fas fa-chevron-right text-muted"></i>
+                            </div>
+                        </a>
+                        <a href="{{ url_for('trading.stock_detail', ticker='GOOGL') }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="fw-bold">GOOGL</span>
+                                    <small class="text-muted d-block">Alphabet Inc.</small>
+                                </div>
+                                <i class="fas fa-chevron-right text-muted"></i>
+                            </div>
+                        </a>
+                        <a href="{{ url_for('trading.stock_detail', ticker='FB') }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="fw-bold">META</span>
+                                    <small class="text-muted d-block">Meta Platforms Inc.</small>
+                                </div>
+                                <i class="fas fa-chevron-right text-muted"></i>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
