@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, current_user, login_required
 from app import db, bcrypt
 from app.models.user import User
+from app.models.stock import CashTransaction
 from app.forms import RegistrationForm, LoginForm, FundDepositForm, FundWithdrawalForm
 from datetime import datetime
 import zoneinfo
@@ -73,6 +74,13 @@ def deposit_funds():
     if form.validate_on_submit():
         amount = form.amount.data
         if current_user.deposit(amount):
+            # Create a cash transaction record
+            cash_transaction = CashTransaction(
+                user_id=current_user.id,
+                transaction_type="deposit",
+                amount=amount
+            )
+            db.session.add(cash_transaction)
             db.session.commit()
             flash(f'Successfully deposited ${amount:.2f} to your account.', 'success')
             return redirect(url_for('main.dashboard'))
@@ -90,6 +98,13 @@ def withdraw_funds():
     if form.validate_on_submit():
         amount = form.amount.data
         if current_user.withdraw(amount):
+            # Create a cash transaction record
+            cash_transaction = CashTransaction(
+                user_id=current_user.id,
+                transaction_type="withdraw",
+                amount=amount
+            )
+            db.session.add(cash_transaction)
             db.session.commit()
             flash(f'Successfully withdrew ${amount:.2f} from your account.', 'success')
             return redirect(url_for('main.dashboard'))

@@ -27,6 +27,9 @@ class User(db.Model, UserMixin):
     # Transactions history
     transactions = db.relationship('Transaction', backref='user', lazy=True)
     
+    # Cash transactions history
+    cash_transactions = db.relationship('CashTransaction', backref='user', lazy=True)
+    
     # Trading posts
     posts = db.relationship('TradingPost', backref='author', lazy=True)
     

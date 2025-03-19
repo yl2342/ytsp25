@@ -152,23 +152,44 @@
                                 <thead>
                                     <tr>
                                         <th>Date</th>
-                                        <th>Symbol</th>
                                         <th>Type</th>
+                                        <th>Description</th>
                                         <th>Amount</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for transaction in recent_transactions %}
-                                        <tr>
-                                            <td>{{ transaction.timestamp.strftime('%m/%d/%Y') }}</td>
-                                            <td>
-                                                <a href="{{ url_for('trading.stock_detail', ticker=transaction.ticker) }}">{{ transaction.ticker }}</a>
-                                            </td>
-                                            <td class="{% if transaction.transaction_type == 'buy' %}text-primary{% else %}text-danger{% endif %}">
-                                                {{ transaction.transaction_type|upper }}
-                                            </td>
-                                            <td>${{ "%.2f"|format(transaction.total_amount) }}</td>
-                                        </tr>
+                                    {% for tx in recent_transactions %}
+                                        {% if tx.type == 'stock' %}
+                                            <tr>
+                                                <td>{{ tx.transaction.timestamp.strftime('%m/%d/%Y') }}</td>
+                                                <td>
+                                                    <span class="badge {% if tx.transaction.transaction_type == 'buy' %}bg-primary{% else %}bg-danger{% endif %}">
+                                                        {{ tx.transaction.transaction_type|upper }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <a href="{{ url_for('trading.stock_detail', ticker=tx.transaction.ticker) }}">
+                                                        {{ tx.transaction.ticker }}
+                                                    </a>
+                                                    <span class="text-muted">({{ tx.transaction.quantity|int }} shares)</span>
+                                                </td>
+                                                <td>${{ "%.2f"|format(tx.transaction.total_amount) }}</td>
+                                            </tr>
+                                        {% else %}
+                                            <tr>
+                                                <td>{{ tx.transaction.timestamp.strftime('%m/%d/%Y') }}</td>
+                                                <td>
+                                                    <span class="badge {% if tx.transaction.transaction_type == 'deposit' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                                                        {{ tx.transaction.transaction_type|upper }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <i class="fas {% if tx.transaction.transaction_type == 'deposit' %}fa-arrow-down{% else %}fa-arrow-up{% endif %} me-1"></i>
+                                                    {{ tx.transaction.transaction_type|capitalize }} of cash
+                                                </td>
+                                                <td>${{ "%.2f"|format(tx.transaction.amount) }}</td>
+                                            </tr>
+                                        {% endif %}
                                     {% endfor %}
                                 </tbody>
                             </table>

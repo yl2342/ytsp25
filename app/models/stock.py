@@ -75,4 +75,20 @@ class Transaction(db.Model):
         self.total_amount = quantity * price
 
     def __repr__(self):
-        return f"Transaction('{self.ticker}', '{self.transaction_type}', {self.quantity} @ ${self.price:.2f})" 
+        return f"Transaction('{self.ticker}', '{self.transaction_type}', {self.quantity} @ ${self.price:.2f})"
+
+
+class CashTransaction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    transaction_type = db.Column(db.String(10), nullable=False)  # 'deposit' or 'withdraw'
+    amount = db.Column(db.Float, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __init__(self, user_id, transaction_type, amount):
+        self.user_id = user_id
+        self.transaction_type = transaction_type
+        self.amount = amount
+
+    def __repr__(self):
+        return f"CashTransaction('{self.transaction_type}', ${self.amount:.2f})" 

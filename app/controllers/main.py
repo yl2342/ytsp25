@@ -41,12 +41,40 @@ def dashboard():
         # Get recent activity from people the user follows
         followed_posts = current_user.followed_posts().limit(10).all()
         
-        # Get user's recent transactions
-        from app.models.stock import Transaction
-        recent_transactions = Transaction.query.filter_by(user_id=current_user.id)\
-                                           .order_by(Transaction.timestamp.desc())\
-                                           .limit(5)\
-                                           .all()
+        # Get user's recent stock transactions
+        from app.models.stock import Transaction, CashTransaction
+        from sqlalchemy import desc, union_all
+        
+        # Get stock transactions
+        stock_transactions = Transaction.query.filter_by(user_id=current_user.id)\
+                                         .order_by(Transaction.timestamp.desc())
+        
+        # Get cash transactions
+        cash_transactions = CashTransaction.query.filter_by(user_id=current_user.id)\
+                                         .order_by(CashTransaction.timestamp.desc())
+        
+        # Combine both types of transactions, sort by timestamp, and limit to 5
+        all_transactions = []
+        for tx in stock_transactions.limit(10).all():
+            all_transactions.append({
+                'type': 'stock',
+                'transaction': tx,
+                'timestamp': tx.timestamp
+            })
+        
+        for tx in cash_transactions.limit(10).all():
+            all_transactions.append({
+                'type': 'cash',
+                'transaction': tx,
+                'timestamp': tx.timestamp
+            })
+        
+        # Sort combined transactions by timestamp (most recent first)
+        recent_transactions = sorted(
+            all_transactions, 
+            key=lambda x: x['timestamp'], 
+            reverse=True
+        )[:5]  # Limit to 5 most recent
         
         # Get global activity feed (public posts)
         global_posts = TradingPost.query.filter_by(is_public=True)\
