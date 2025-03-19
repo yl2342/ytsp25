@@ -17,8 +17,8 @@ class User(db.Model, UserMixin):
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
     balance = db.Column(db.Float, default=0.0)
-    created_at = db.Column(db.DateTime, default=datetime.now(zoneinfo.ZoneInfo("America/New_York")))
-    last_login = db.Column(db.DateTime, default=datetime.now(zoneinfo.ZoneInfo("America/New_York")))
+    created_at_edt = db.Column(db.DateTime, default=datetime.now(zoneinfo.ZoneInfo("America/New_York")))
+    last_login_edt = db.Column(db.DateTime, default=datetime.now(zoneinfo.ZoneInfo("America/New_York")))
     is_active = db.Column(db.Boolean, default=True)
     
     # Portfolio holdings
