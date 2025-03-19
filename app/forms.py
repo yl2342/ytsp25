@@ -57,7 +57,7 @@ class PostCommentForm(FlaskForm):
 
 
 class UserSearchForm(FlaskForm):
-    student_id = StringField('Yale Student ID', validators=[DataRequired()])
+    net_id = StringField('Yale Net ID', validators=[DataRequired()])
     submit = SubmitField('Search')
 
 

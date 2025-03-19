@@ -15,11 +15,12 @@ def search_users():
     searched = False
     
     if form.validate_on_submit() or request.args.get('student_id'):
-        student_id = form.student_id.data or request.args.get('student_id')
+        # Get search term from form or URL parameters - keeping 'student_id' param name for compatibility
+        search_term = form.student_id.data or request.args.get('student_id')
         searched = True
         
-        # Search for users by student ID
-        users = User.query.filter(User.student_id.contains(student_id)).all()
+        # Search for users by net_id instead of student_id
+        users = User.query.filter(User.net_id.contains(search_term)).all()
         
         # Exclude current user from results
         results = [user for user in users if user.id != current_user.id]

@@ -21,12 +21,8 @@
                                                  alt="{{ user.first_name }}" class="rounded-circle" width="50" height="50">
                                         </div>
                                         <div class="ms-3 flex-grow-1">
-                                            <h3 class="h6 mb-1">
-                                                <a href="{{ url_for('social.user_profile', user_id=user.id) }}" class="text-decoration-none">
-                                                    {{ user.first_name }} {{ user.last_name }}
-                                                </a>
-                                            </h3>
-                                            <div class="text-muted small">{{ user.student_id }}</div>
+                                            <h4 class="h6 mb-0">{{ user.first_name }} {{ user.last_name }}</h4>
+                                            <div class="text-muted small">{{ user.net_id }}</div>
                                         </div>
                                         <div>
                                             {% if current_user.is_following(user) %}

@@ -105,7 +105,7 @@
                     <img src="{{ url_for('static', filename='img/avatars/default.png') }}" 
                          alt="{{ current_user.first_name }}" class="rounded-circle mb-3" width="100" height="100">
                     <h3 class="h5 mb-1">{{ current_user.first_name }} {{ current_user.last_name }}</h3>
-                    <div class="text-muted small mb-3">{{ current_user.student_id }}</div>
+                    <div class="text-muted small mb-3">{{ current_user.net_id }}</div>
                     
                     <div class="d-flex justify-content-center gap-3 mb-3">
                         <a href="{{ url_for('social.following') }}" class="text-decoration-none text-center">

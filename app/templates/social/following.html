@@ -26,7 +26,7 @@
                                                     {{ user.first_name }} {{ user.last_name }}
                                                 </a>
                                             </h3>
-                                            <div class="text-muted small">{{ user.student_id }}</div>
+                                            <div class="text-muted small">{{ user.net_id }}</div>
                                         </div>
                                         <div>
                                             <form action="{{ url_for('social.unfollow_user', user_id=user.id) }}" method="post">
