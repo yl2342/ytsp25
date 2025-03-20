@@ -81,14 +81,14 @@
                                             <div class="fw-bold">{{ holding.ticker }}</div>
                                             <div class="small text-muted">{{ holding.company_name }}</div>
                                         </td>
-                                        <td>{{ holding.quantity|int }}</td>
-                                        <td>${{ holding.average_price|round(2) }}</td>
-                                        <td>${{ holding.current_price|round(2) }}</td>
-                                        <td>${{ holding.market_value|round(2) }}</td>
+                                        <td>{{ (holding.quantity|default(0))|int }}</td>
+                                        <td>${{ (holding.average_price|default(0))|round(2) }}</td>
+                                        <td>${{ (holding.current_price|default(0))|round(2) }}</td>
+                                        <td>${{ (holding.market_value|default(0))|round(2) }}</td>
                                         <td class="{% if holding.profit >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
-                                            {% if holding.profit >= 0 %}+{% endif %}${{ holding.profit|round(2) }}
+                                            {% if holding.profit >= 0 %}+{% endif %}${{ (holding.profit|default(0))|round(2) }}
                                             <br>
-                                            <small>({{ holding.profit_percent|round(2) }}%)</small>
+                                            <small>({{ (holding.profit_percent|default(0))|round(2) }}%)</small>
                                         </td>
                                         <td>
                                             <a href="{{ url_for('trading.stock_detail', ticker=holding.ticker) }}" class="btn btn-sm btn-outline-primary">Trade</a>
@@ -139,9 +139,9 @@
                                         <td class="{% if transaction.action == 'buy' %}text-success{% else %}text-danger{% endif %} fw-bold">
                                             {{ transaction.action|upper }}
                                         </td>
-                                        <td>{{ transaction.quantity|int }}</td>
-                                        <td>${{ transaction.price|round(2) }}</td>
-                                        <td>${{ (transaction.quantity * transaction.price)|round(2) }}</td>
+                                        <td>{{ (transaction.quantity|default(0))|int }}</td>
+                                        <td>${{ (transaction.price|default(0))|round(2) }}</td>
+                                        <td>${{ ((transaction.quantity|default(0)) * (transaction.price|default(0)))|round(2) }}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>

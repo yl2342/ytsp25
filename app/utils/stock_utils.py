@@ -3,11 +3,17 @@ import yfinance as yf
 import pandas as pd
 from datetime import datetime, timedelta
 import logging
+import time
+from functools import lru_cache
 
 logger = logging.getLogger(__name__)
 
 # Keep the Alpha Vantage API key for potential future use
 ALPHA_VANTAGE_API_KEY = os.environ.get('STOCK_API_KEY')
+
+# Simple in-memory cache for stock data
+_stock_cache = {}
+_cache_expiry = 60 * 5  # Cache expiry in seconds (5 minutes)
 
 def get_stock_info(ticker):
     """
@@ -19,9 +25,19 @@ def get_stock_info(ticker):
     Returns:
         dict: Dictionary with stock information or None if not found
     """
+    # Check cache first
+    formatted_ticker = ticker.upper().strip()
+    current_time = time.time()
+    
+    if formatted_ticker in _stock_cache:
+        cache_data, timestamp = _stock_cache[formatted_ticker]
+        # Return cached data if it's still fresh
+        if current_time - timestamp < _cache_expiry:
+            logger.info(f"Using cached data for {formatted_ticker}")
+            return cache_data
+    
     try:
         # Normalize ticker format
-        formatted_ticker = ticker.upper().strip()
         logger.info(f"Attempting to fetch stock info for ticker: {formatted_ticker}")
         
         # Get stock info from yfinance
@@ -39,6 +55,10 @@ def get_stock_info(ticker):
                 quote = stock.history(period="1d")
                 if quote.empty:
                     logger.warning(f"Empty quote data for {formatted_ticker}")
+                    # Check if we have cached data as a fallback
+                    if formatted_ticker in _stock_cache:
+                        logger.info(f"Returning expired cached data for {formatted_ticker} as fallback")
+                        return _stock_cache[formatted_ticker][0]
                     return None
                     
                 # Create minimal info from quote data
@@ -51,11 +71,19 @@ def get_stock_info(ticker):
                 logger.info(f"Created minimal info from quote for {formatted_ticker}")
             except Exception as quote_e:
                 logger.error(f"Failed to get quote for {formatted_ticker}: {str(quote_e)}")
+                # Check if we have cached data as a fallback
+                if formatted_ticker in _stock_cache:
+                    logger.info(f"Returning expired cached data for {formatted_ticker} as fallback")
+                    return _stock_cache[formatted_ticker][0]
                 return None
         
         # Basic validation to ensure we have real data
         if not info:
             logger.warning(f"Empty info data for {formatted_ticker}")
+            # Check if we have cached data as a fallback
+            if formatted_ticker in _stock_cache:
+                logger.info(f"Returning expired cached data for {formatted_ticker} as fallback")
+                return _stock_cache[formatted_ticker][0]
             return None
             
         # Check if we have a valid equity
@@ -78,6 +106,10 @@ def get_stock_info(ticker):
                 if 'longName' not in info and 'shortName' in info:
                     info['longName'] = info['shortName']
             else:
+                # Check if we have cached data as a fallback
+                if formatted_ticker in _stock_cache:
+                    logger.info(f"Returning expired cached data for {formatted_ticker} as fallback")
+                    return _stock_cache[formatted_ticker][0]
                 return None
         
         # Calculate change and change percent
@@ -104,6 +136,11 @@ def get_stock_info(ticker):
                         logger.info(f"Using quote Close price: {current_price}")
                 except Exception as quote_e:
                     logger.error(f"Failed to get quote for price: {str(quote_e)}")
+                    
+                    # Check if we have cached data as a fallback
+                    if current_price == 0 and formatted_ticker in _stock_cache:
+                        logger.info(f"Using price from expired cached data for {formatted_ticker}")
+                        current_price = _stock_cache[formatted_ticker][0]['current_price']
         
         # Ensure we have a positive previous close
         if previous_close <= 0 and current_price > 0:
@@ -122,20 +159,23 @@ def get_stock_info(ticker):
             'name': name,
             'sector': info.get('sector', 'Unknown'),
             'industry': info.get('industry', 'Unknown'),
-            'current_price': current_price,
-            'market_cap': info.get('marketCap', 0),
-            'pe_ratio': info.get('trailingPE', info.get('forwardPE', 0)),
-            'dividend_yield': info.get('dividendYield', 0) * 100 if info.get('dividendYield') else 0,
-            'volume': info.get('volume', info.get('regularMarketVolume', 0)),
-            'avg_volume': info.get('averageVolume', info.get('averageDailyVolume10Day', 0)),
-            'year_low': info.get('fiftyTwoWeekLow', 0),
-            'year_high': info.get('fiftyTwoWeekHigh', 0),
+            'current_price': current_price or 0.0,
+            'market_cap': info.get('marketCap', 0) or 0.0,
+            'pe_ratio': info.get('trailingPE', info.get('forwardPE', 0)) or 0.0,
+            'dividend_yield': (info.get('dividendYield', 0) * 100 if info.get('dividendYield') else 0) or 0.0,
+            'volume': info.get('volume', info.get('regularMarketVolume', 0)) or 0,
+            'avg_volume': info.get('averageVolume', info.get('averageDailyVolume10Day', 0)) or 0,
+            'year_low': info.get('fiftyTwoWeekLow', 0) or 0.0,
+            'year_high': info.get('fiftyTwoWeekHigh', 0) or 0.0,
             'description': info.get('longBusinessSummary', ''),
-            'eps': info.get('trailingEps', info.get('forwardEps', 0)),
-            'change': change,
-            'change_percent': change_percent,
+            'eps': info.get('trailingEps', info.get('forwardEps', 0)) or 0.0,
+            'change': change or 0.0,
+            'change_percent': change_percent or 0.0,
             'exchange': info.get('exchange', info.get('fullExchangeName', 'N/A'))
         }
+        
+        # Store in cache
+        _stock_cache[formatted_ticker] = (stock_data, current_time)
         
         logger.info(f"Successfully fetched stock info for {formatted_ticker}")
         return stock_data
@@ -143,6 +183,11 @@ def get_stock_info(ticker):
         logger.error(f"Error fetching stock info for {ticker}: {str(e)}")
         import traceback
         logger.error(traceback.format_exc())
+        
+        # Check if we have cached data as a fallback
+        if formatted_ticker in _stock_cache:
+            logger.info(f"Returning expired cached data for {formatted_ticker} after error")
+            return _stock_cache[formatted_ticker][0]
         return None
 
 
@@ -258,11 +303,49 @@ def get_current_price(ticker):
     """
     try:
         formatted_ticker = ticker.upper().strip()
+        
+        # Check if we have cached data first
+        if formatted_ticker in _stock_cache:
+            cache_data, timestamp = _stock_cache[formatted_ticker]
+            current_time = time.time()
+            
+            # Use cached price if it's still fresh (less than 5 minutes old)
+            if current_time - timestamp < _cache_expiry:
+                logger.info(f"Using cached price for {formatted_ticker}: ${cache_data['current_price']}")
+                return cache_data['current_price']
+        
+        # If no fresh cache, try to get fresh data
+        stock_info = get_stock_info(formatted_ticker)
+        if stock_info and stock_info.get('current_price', 0) > 0:
+            return stock_info['current_price']
+        
+        # Fall back to direct API call if get_stock_info doesn't work
         stock = yf.Ticker(formatted_ticker)
         price = stock.info.get('currentPrice', stock.info.get('regularMarketPrice', 0))
+        
+        # If price is 0, try get quote data
+        if price == 0:
+            try:
+                quote = stock.history(period="1d")
+                if not quote.empty:
+                    price = quote['Close'].iloc[-1]
+            except Exception as quote_e:
+                logger.error(f"Failed to get quote for price in get_current_price: {str(quote_e)}")
+        
+        # Finally, check for old cached data if we still have 0
+        if price == 0 and formatted_ticker in _stock_cache:
+            logger.info(f"Using expired cached price for {formatted_ticker}")
+            price = _stock_cache[formatted_ticker][0]['current_price']
+            
         return price
     except Exception as e:
         logger.error(f"Error getting current price for {ticker}: {str(e)}")
+        
+        # If there's an error, try to use cached data
+        if formatted_ticker in _stock_cache:
+            logger.info(f"Using expired cached price after error for {formatted_ticker}")
+            return _stock_cache[formatted_ticker][0]['current_price']
+            
         return 0
 
 

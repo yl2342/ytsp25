@@ -23,6 +23,9 @@ def execute_buy(user, ticker, quantity, price, make_public=False, trading_note="
         tuple: (success: bool, message: str, transaction: Transaction or None)
     """
     try:
+        # Log transaction details for debugging
+        logger.info(f"Executing buy: {ticker}, quantity: {quantity}, price: {price}, user: {user.id}")
+        
         # Verify user has enough balance
         total_cost = quantity * price
         if user.balance < total_cost:
@@ -32,9 +35,23 @@ def execute_buy(user, ticker, quantity, price, make_public=False, trading_note="
         user.balance -= total_cost
         
         # Get stock info
+        logger.info(f"Retrieving stock info for ticker: {ticker}")
         stock_info = get_stock_info(ticker)
+        
+        # If we couldn't get stock info but have a valid price, use basic info
+        if not stock_info and price > 0:
+            logger.warning(f"Could not retrieve full stock info for {ticker}, but continuing with basic info")
+            stock_info = {
+                'name': ticker,  # Use ticker as name if we don't have actual company name
+                'ticker': ticker
+            }
+        
         if not stock_info:
-            return False, "Could not retrieve stock information.", None
+            logger.error(f"Failed to retrieve stock information for {ticker}. Make sure the ticker symbol is valid.")
+            return False, f"Could not retrieve stock information for {ticker}. Please try again with a valid ticker.", None
+        
+        # Log successful stock info retrieval
+        logger.info(f"Stock info available for trade: {ticker} - {stock_info.get('name', 'Unknown')}")
         
         # Update or create stock holding
         holding = StockHolding.query.filter_by(user_id=user.id, ticker=ticker).first()
@@ -47,7 +64,7 @@ def execute_buy(user, ticker, quantity, price, make_public=False, trading_note="
             holding = StockHolding(
                 user_id=user.id,
                 ticker=ticker,
-                company_name=stock_info['name'],
+                company_name=stock_info.get('name', ticker),  # Use ticker as fallback
                 quantity=quantity,
                 buy_price=price
             )
@@ -110,6 +127,9 @@ def execute_sell(user, ticker, quantity, price, make_public=False, trading_note=
         tuple: (success: bool, message: str, transaction: Transaction or None)
     """
     try:
+        # Log transaction details
+        logger.info(f"Executing sell: {ticker}, quantity: {quantity}, price: {price}, user: {user.id}")
+        
         # Check if user has the stock and enough shares
         holding = StockHolding.query.filter_by(user_id=user.id, ticker=ticker).first()
         
@@ -191,33 +211,68 @@ def get_portfolio_summary(user):
         stocks = []
         
         for holding in holdings:
-            # Update current price
-            current_price = get_current_price(holding.ticker)
-            if current_price > 0:
-                holding.current_price = current_price
-            
-            # Calculate values
-            market_value = holding.quantity * holding.current_price
-            cost_basis = holding.quantity * holding.average_buy_price
-            profit_loss = market_value - cost_basis
-            profit_loss_percent = (profit_loss / cost_basis * 100) if cost_basis > 0 else 0
-            
-            # Add to totals
-            total_value += market_value
-            total_cost += cost_basis
-            
-            # Add stock details
-            stocks.append({
-                'ticker': holding.ticker,
-                'company_name': holding.company_name,
-                'quantity': holding.quantity,
-                'average_price': holding.average_buy_price,
-                'current_price': holding.current_price,
-                'market_value': market_value,
-                'cost_basis': cost_basis,
-                'profit_loss': profit_loss,
-                'profit_loss_percent': profit_loss_percent
-            })
+            try:
+                # Update current price
+                current_price = get_current_price(holding.ticker)
+                
+                # Protect against API failures by using stored price if needed
+                if current_price <= 0:
+                    logger.warning(f"Got invalid price (${current_price}) for {holding.ticker}, using last known price")
+                    current_price = holding.current_price
+                    
+                    # If still 0, use average buy price as a last resort
+                    if current_price <= 0:
+                        logger.warning(f"Using average buy price for {holding.ticker} as fallback")
+                        current_price = holding.average_buy_price
+                
+                # Only update the price if we got a valid new price
+                if current_price > 0:
+                    holding.current_price = current_price
+                
+                # Calculate values
+                market_value = holding.quantity * holding.current_price
+                cost_basis = holding.quantity * holding.average_buy_price
+                profit_loss = market_value - cost_basis
+                profit_loss_percent = (profit_loss / cost_basis * 100) if cost_basis > 0 else 0
+                
+                # Add to totals
+                total_value += market_value
+                total_cost += cost_basis
+                
+                # Add stock details
+                stocks.append({
+                    'ticker': holding.ticker,
+                    'company_name': holding.company_name,
+                    'quantity': holding.quantity,
+                    'average_price': holding.average_buy_price,
+                    'current_price': holding.current_price,
+                    'market_value': market_value,
+                    'cost_basis': cost_basis,
+                    'profit': profit_loss,
+                    'profit_percent': profit_loss_percent
+                })
+            except Exception as stock_e:
+                logger.error(f"Error processing holding {holding.ticker}: {str(stock_e)}")
+                # Still include the stock with last known values
+                market_value = holding.quantity * holding.current_price
+                cost_basis = holding.quantity * holding.average_buy_price
+                profit_loss = market_value - cost_basis
+                profit_loss_percent = (profit_loss / cost_basis * 100) if cost_basis > 0 else 0
+                
+                total_value += market_value
+                total_cost += cost_basis
+                
+                stocks.append({
+                    'ticker': holding.ticker,
+                    'company_name': holding.company_name,
+                    'quantity': holding.quantity,
+                    'average_price': holding.average_buy_price,
+                    'current_price': holding.current_price,
+                    'market_value': market_value,
+                    'cost_basis': cost_basis,
+                    'profit': profit_loss,
+                    'profit_percent': profit_loss_percent
+                })
         
         # Calculate overall profit/loss
         total_profit_loss = total_value - total_cost
@@ -230,7 +285,7 @@ def get_portfolio_summary(user):
             'cash_balance': user.balance,
             'portfolio_value': total_value,
             'total_account_value': user.balance + total_value,
-            'stocks': stocks,
+            'holdings': stocks,
             'total_profit_loss': total_profit_loss,
             'total_profit_loss_percent': total_profit_loss_percent
         }
@@ -242,7 +297,7 @@ def get_portfolio_summary(user):
             'cash_balance': user.balance,
             'portfolio_value': 0,
             'total_account_value': user.balance,
-            'stocks': [],
+            'holdings': [],
             'total_profit_loss': 0,
             'total_profit_loss_percent': 0
         } 

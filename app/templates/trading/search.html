@@ -48,9 +48,9 @@
                                                 <tr>
                                                     <td class="fw-bold">{{ stock.ticker }}</td>
                                                     <td>{{ stock.name }}</td>
-                                                    <td>${{ stock.current_price|round(2) }}</td>
+                                                    <td>${{ (stock.current_price|default(0))|round(2) }}</td>
                                                     <td class="{% if stock.change_percent >= 0 %}text-success{% else %}text-danger{% endif %}">
-                                                        {% if stock.change_percent >= 0 %}+{% endif %}{{ stock.change_percent|round(2) }}%
+                                                        {% if stock.change_percent >= 0 %}+{% endif %}{{ (stock.change_percent|default(0))|round(2) }}%
                                                     </td>
                                                     <td>
                                                         <a href="{{ url_for('trading.stock_detail', ticker=stock.ticker) }}" class="btn btn-sm btn-outline-primary">

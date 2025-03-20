@@ -29,9 +29,9 @@
                             <div class="text-muted">{{ stock.exchange }}</div>
                         </div>
                         <div class="text-end">
-                            <div class="stock-price">${{ stock.current_price|round(2) }}</div>
+                            <div class="stock-price">${{ (stock.current_price|default(0))|round(2) }}</div>
                             <div class="{% if stock.change_percent >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
-                                {% if stock.change_percent >= 0 %}+{% endif %}${{ stock.change|round(2) }} ({{ stock.change_percent|round(2) }}%)
+                                {% if stock.change_percent >= 0 %}+{% endif %}${{ (stock.change|default(0))|round(2) }} ({{ (stock.change_percent|default(0))|round(2) }}%)
                             </div>
                         </div>
                     </div>
@@ -68,19 +68,19 @@
                             <table class="table table-sm">
                                 <tr>
                                     <th>Market Cap</th>
-                                    <td>${{ (stock.market_cap / 1000000000)|round(2) }}B</td>
+                                    <td>${{ ((stock.market_cap|default(0)) / 1000000000)|round(2) }}B</td>
                                 </tr>
                                 <tr>
                                     <th>P/E Ratio</th>
-                                    <td>{{ stock.pe_ratio|round(2) }}</td>
+                                    <td>{{ (stock.pe_ratio|default(0))|round(2) }}</td>
                                 </tr>
                                 <tr>
                                     <th>Dividend Yield</th>
-                                    <td>{{ stock.dividend_yield|round(2) }}%</td>
+                                    <td>{{ (stock.dividend_yield|default(0))|round(2) }}%</td>
                                 </tr>
                                 <tr>
                                     <th>52-Week High</th>
-                                    <td>${{ stock.year_high|round(2) }}</td>
+                                    <td>${{ (stock.year_high|default(0))|round(2) }}</td>
                                 </tr>
                             </table>
                         </div>
@@ -88,19 +88,19 @@
                             <table class="table table-sm">
                                 <tr>
                                     <th>Volume</th>
-                                    <td>{{ stock.volume|int }}</td>
+                                    <td>{{ (stock.volume|default(0))|int }}</td>
                                 </tr>
                                 <tr>
                                     <th>Avg Volume</th>
-                                    <td>{{ stock.avg_volume|int }}</td>
+                                    <td>{{ (stock.avg_volume|default(0))|int }}</td>
                                 </tr>
                                 <tr>
                                     <th>EPS</th>
-                                    <td>${{ stock.eps|round(2) }}</td>
+                                    <td>${{ (stock.eps|default(0))|round(2) }}</td>
                                 </tr>
                                 <tr>
                                     <th>52-Week Low</th>
-                                    <td>${{ stock.year_low|round(2) }}</td>
+                                    <td>${{ (stock.year_low|default(0))|round(2) }}</td>
                                 </tr>
                             </table>
                         </div>
@@ -160,7 +160,7 @@
                     <h2 class="h5 mb-0">Place Order</h2>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ url_for('trading.execute_trade') }}">
+                    <form id="trade-form" method="POST" action="{{ url_for('trading.execute_trade') }}">
                         {{ trade_form.hidden_tag() }}
                         {{ trade_form.ticker }}
                         {{ trade_form.company_name }}
@@ -218,16 +218,16 @@
                         </div>
                         <div class="d-flex justify-content-between">
                             <span>Average Cost:</span>
-                            <span>${{ user_holding.average_price|round(2) }}</span>
+                            <span>${{ (user_holding.average_price|default(0))|round(2) }}</span>
                         </div>
                         <div class="d-flex justify-content-between">
                             <span>Total Value:</span>
-                            <span>${{ (user_holding.quantity * stock.current_price)|round(2) }}</span>
+                            <span>${{ ((user_holding.quantity|default(0)) * (stock.current_price|default(0)))|round(2) }}</span>
                         </div>
                         <div class="d-flex justify-content-between">
                             <span>Profit/Loss:</span>
-                            {% set pl = (stock.current_price - user_holding.average_price) * user_holding.quantity %}
-                            {% set pl_percent = (stock.current_price - user_holding.average_price) / user_holding.average_price * 100 %}
+                            {% set pl = ((stock.current_price|default(0)) - (user_holding.average_price|default(0))) * (user_holding.quantity|default(0)) %}
+                            {% set pl_percent = ((stock.current_price|default(0)) - (user_holding.average_price|default(0))) / (user_holding.average_price|default(1)) * 100 %}
                             <span class="{% if pl >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
                                 {% if pl >= 0 %}+{% endif %}${{ pl|round(2) }} ({{ pl_percent|round(2) }}%)
                             </span>
@@ -251,75 +251,162 @@
         
         // Parse historical data passed from Python
         const historicalDataStr = '{{ historical_data|tojson|safe }}';
-        const historicalData = JSON.parse(historicalDataStr);
-        const dates = historicalData.map(item => item.date);
-        const prices = historicalData.map(item => item.close);
+        let historicalData = [];
+        try {
+            historicalData = JSON.parse(historicalDataStr);
+        } catch (e) {
+            console.error("Error parsing historical data:", e);
+            // Provide empty fallback data if parsing fails
+            historicalData = [];
+        }
         
-        const stockChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: dates,
-                datasets: [{
-                    label: '{{ stock.ticker }} Price',
-                    data: prices,
-                    borderColor: '{{ stock.change_percent >= 0 and "#28a745" or "#dc3545" }}',
-                    backgroundColor: '{{ stock.change_percent >= 0 and "rgba(40, 167, 69, 0.1)" or "rgba(220, 53, 69, 0.1)" }}',
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    pointHoverRadius: 5,
-                    tension: 0.1,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        callbacks: {
-                            label: function(context) {
-                                return `$${context.raw.toFixed(2)}`;
+        // Ensure we have valid data for the chart
+        const dates = historicalData.map(item => item.date || '');
+        const prices = historicalData.map(item => item.close || 0);
+        
+        // Only create chart if we have data and a canvas element
+        if (ctx && dates.length > 0 && prices.length > 0) {
+            const stockChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: '{{ stock.ticker }} Price',
+                        data: prices,
+                        borderColor: '{{ stock.change_percent >= 0 and "#28a745" or "#dc3545" }}',
+                        backgroundColor: '{{ stock.change_percent >= 0 and "rgba(40, 167, 69, 0.1)" or "rgba(220, 53, 69, 0.1)" }}',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
+                        tension: 0.1,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw || 0;
+                                    return `$${typeof value === 'number' ? value.toFixed(2) : '0.00'}`;
+                                }
                             }
                         }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: {
-                            display: false
-                        }
                     },
-                    y: {
-                        beginAtZero: false,
-                        ticks: {
-                            callback: function(value) {
-                                return '$' + value.toFixed(2);
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + (typeof value === 'number' ? value.toFixed(2) : '0.00');
+                                }
                             }
                         }
                     }
                 }
-            }
-        });
-        
-        // Calculate estimated total when quantity changes
-        const quantityInput = document.getElementById('quantity');
-        const priceInput = document.getElementById('price');
-        const estimatedTotalInput = document.getElementById('estimated_total');
-        
-        function updateEstimatedTotal() {
-            const quantity = parseInt(quantityInput.value) || 0;
-            const price = parseFloat(priceInput.value) || 0;
-            const total = (quantity * price).toFixed(2);
-            estimatedTotalInput.value = total;
+            });
+        } else {
+            console.log("Not creating chart due to missing data or canvas element");
         }
         
-        quantityInput.addEventListener('input', updateEstimatedTotal);
-        updateEstimatedTotal();  // Initialize with default values
+        // Calculate estimated total when quantity changes
+        const tradeForm = document.getElementById('trade-form');
+        
+        if (tradeForm) {
+            // Get stock price from the page to ensure consistent pricing
+            let stockPrice = 0;
+            try {
+                stockPrice = parseFloat('{{ stock.current_price|default(0) }}') || 0;
+                if (isNaN(stockPrice)) stockPrice = 0;
+            } catch (e) {
+                console.error("Error parsing stock price:", e);
+                stockPrice = 0;
+            }
+            
+            console.log("Stock price for calculations:", stockPrice);
+            
+            const hiddenPriceInput = tradeForm.querySelector('input[name="price"]');
+            
+            // Ensure the hidden price input has the correct value
+            if (hiddenPriceInput) {
+                hiddenPriceInput.value = stockPrice;
+            }
+            
+            const quantityInput = tradeForm.querySelector('input[name="quantity"]');
+            const estimatedTotalInput = document.getElementById('estimated_total');
+            
+            function updateEstimatedTotal() {
+                if (quantityInput && estimatedTotalInput) {
+                    let quantity = 0;
+                    try {
+                        quantity = parseFloat(quantityInput.value) || 0;
+                        if (isNaN(quantity)) quantity = 0;
+                    } catch (e) {
+                        console.error("Error parsing quantity:", e);
+                        quantity = 0;
+                    }
+                    
+                    const total = (quantity * stockPrice).toFixed(2);
+                    estimatedTotalInput.value = total;
+                    console.log(`Calculating total: ${quantity} * ${stockPrice} = ${total}`);
+                }
+            }
+            
+            if (quantityInput) {
+                // Prevent non-numeric input
+                quantityInput.addEventListener('input', function(e) {
+                    // Replace any non-digit characters except decimal point
+                    this.value = this.value.replace(/[^\d.]/g, '');
+                    // Ensure only one decimal point
+                    if ((this.value.match(/\./g) || []).length > 1) {
+                        this.value = this.value.replace(/\.+$/, '');
+                    }
+                    updateEstimatedTotal();
+                });
+                
+                // Add event listeners for radio buttons to recalculate total when action changes
+                const actionRadios = tradeForm.querySelectorAll('input[name="action"]');
+                actionRadios.forEach(radio => {
+                    radio.addEventListener('change', updateEstimatedTotal);
+                });
+                
+                // Validate form before submission
+                tradeForm.addEventListener('submit', function(e) {
+                    const quantity = parseFloat(quantityInput.value) || 0;
+                    if (quantity <= 0) {
+                        e.preventDefault();
+                        alert('Please enter a valid quantity greater than 0');
+                        return false;
+                    }
+                    
+                    // Double check that price is set
+                    if (hiddenPriceInput && parseFloat(hiddenPriceInput.value) <= 0) {
+                        hiddenPriceInput.value = stockPrice;
+                    }
+                    
+                    return true;
+                });
+                
+                // Initialize with default values
+                updateEstimatedTotal();
+            } else {
+                console.error("Quantity input not found. Check the form field names.");
+            }
+        } else {
+            console.error("Trade form element not found. Check the form ID.");
+        }
     });
 </script>
 {% endblock %} 

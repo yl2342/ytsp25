@@ -74,13 +74,34 @@ def stock_detail(ticker):
         
         if not stock_info:
             logger.warning(f"No stock information found for ticker: {ticker}")
-            flash(f"Could not find information for ticker: {ticker}", "danger")
+            flash(f"Could not find information for ticker: {ticker}. Please check that you've entered a valid stock symbol.", "danger")
             return redirect(url_for('trading.stock_search'))
         
         logger.info(f"Successfully retrieved stock info for {ticker}: {stock_info['name']}")
         
+        # Ensure all numeric fields have default values to prevent template errors
+        numeric_fields = [
+            'current_price', 'market_cap', 'pe_ratio', 'dividend_yield', 
+            'volume', 'avg_volume', 'year_low', 'year_high', 'eps', 
+            'change', 'change_percent'
+        ]
+        
+        for field in numeric_fields:
+            if field not in stock_info or stock_info[field] is None:
+                stock_info[field] = 0.0
+                logger.warning(f"Missing {field} for {ticker}, set to default 0.0")
+            elif not isinstance(stock_info[field], (int, float)):
+                try:
+                    stock_info[field] = float(stock_info[field])
+                except (ValueError, TypeError):
+                    stock_info[field] = 0.0
+                    logger.warning(f"Invalid {field} value for {ticker}, set to default 0.0")
+        
         # Get historical data for charts
         historical_data = get_stock_historical_data(ticker, period='6mo')
+        if not historical_data:
+            logger.warning(f"No historical data found for ticker: {ticker}")
+            flash(f"Historical price data for {ticker} could not be retrieved, but you can still trade.", "warning")
         
         # Check if user owns this stock
         user_holding = StockHolding.query.filter_by(user_id=current_user.id, ticker=ticker).first()
@@ -106,50 +127,83 @@ def stock_detail(ticker):
                             user_holding=user_holding,
                             trade_form=trade_form,
                             recent_transactions=recent_transactions)
+                            
     except Exception as e:
-        logger.error(f"Error in stock_detail for ticker {ticker}: {str(e)}")
+        logger.error(f"Error in stock_detail route for {ticker}: {str(e)}")
         import traceback
         logger.error(traceback.format_exc())
-        flash(f"An error occurred while retrieving stock information. Please try again.", "danger")
+        flash("An error occurred while loading stock details. Please try again.", "danger")
         return redirect(url_for('trading.stock_search'))
 
 
 @trading_bp.route('/trade', methods=['POST'])
 @login_required
 def execute_trade():
-    form = TradeForm()
-    
-    if form.validate_on_submit():
-        ticker = form.ticker.data.upper()
-        company_name = form.company_name.data
-        action = form.action.data
-        quantity = form.quantity.data
-        price = float(form.price.data)
-        make_public = form.make_public.data
-        trading_note = form.trading_note.data
+    try:
+        form = TradeForm()
         
-        if action == 'buy':
-            success, message, transaction = execute_buy(
-                current_user, ticker, quantity, price, make_public, trading_note
-            )
-        else:  # action == 'sell'
-            success, message, transaction = execute_sell(
-                current_user, ticker, quantity, price, make_public, trading_note
-            )
-        
-        if success:
-            flash(message, 'success')
-        else:
-            flash(message, 'danger')
+        if form.validate_on_submit():
+            ticker = form.ticker.data.upper()
+            company_name = form.company_name.data
+            action = form.action.data
             
-        return redirect(url_for('trading.stock_detail', ticker=ticker))
-    
-    # If form validation fails
-    for field, errors in form.errors.items():
-        for error in errors:
-            flash(f"{getattr(form, field).label.text}: {error}", "danger")
-    
-    return redirect(url_for('trading.stock_search'))
+            # Validate quantity is a positive number
+            try:
+                quantity = float(form.quantity.data)
+                if quantity <= 0:
+                    flash("Quantity must be a positive number.", "danger")
+                    return redirect(url_for('trading.stock_detail', ticker=ticker))
+            except (ValueError, TypeError):
+                flash("Invalid quantity value. Please enter a valid number.", "danger")
+                return redirect(url_for('trading.stock_detail', ticker=ticker))
+                
+            # Validate price is a positive number    
+            try:
+                price = float(form.price.data)
+                if price <= 0:
+                    flash("Invalid price value.", "danger")
+                    return redirect(url_for('trading.stock_detail', ticker=ticker))
+            except (ValueError, TypeError):
+                flash("Invalid price value.", "danger")
+                return redirect(url_for('trading.stock_detail', ticker=ticker))
+                
+            make_public = form.make_public.data
+            trading_note = form.trading_note.data
+            
+            logger.info(f"Trade order: {action} {quantity} shares of {ticker} at ${price}")
+            
+            if action == 'buy':
+                success, message, transaction = execute_buy(
+                    current_user, ticker, quantity, price, make_public, trading_note
+                )
+            else:  # action == 'sell'
+                success, message, transaction = execute_sell(
+                    current_user, ticker, quantity, price, make_public, trading_note
+                )
+            
+            if success:
+                flash(message, 'success')
+            else:
+                flash(message, 'danger')
+                
+            return redirect(url_for('trading.stock_detail', ticker=ticker))
+        
+        # If form validation fails
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f"{getattr(form, field).label.text}: {error}", "danger")
+        
+        # Try to get ticker from form even if validation failed to redirect properly
+        ticker = form.ticker.data.upper() if form.ticker.data else ""
+        if ticker:
+            return redirect(url_for('trading.stock_detail', ticker=ticker))
+        else:
+            return redirect(url_for('trading.stock_search'))
+            
+    except Exception as e:
+        logger.error(f"Error in execute_trade: {str(e)}")
+        flash("An error occurred while processing your trade. Please try again.", "danger")
+        return redirect(url_for('trading.stock_search'))
 
 
 @trading_bp.route('/portfolio')
