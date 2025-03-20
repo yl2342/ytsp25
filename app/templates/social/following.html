@@ -8,7 +8,13 @@
         <div class="col-lg-8 mx-auto">
             <div class="card shadow">
                 <div class="card-header bg-primary text-white">
-                    <h2 class="h4 mb-0"><i class="fas fa-user-friends me-2"></i>People I Follow</h2>
+                    <h2 class="h4 mb-0"><i class="fas fa-user-friends me-2"></i>
+                        {% if profile_user.id == current_user.id %}
+                            People I Follow
+                        {% else %}
+                            People {{ profile_user.first_name }} Follows
+                        {% endif %}
+                    </h2>
                 </div>
                 <div class="card-body p-0">
                     {% if followed_users %}
@@ -28,17 +34,47 @@
                                             </h3>
                                             <div class="text-muted small">{{ user.net_id }}</div>
                                         </div>
+                                        <div class="d-none d-md-flex me-3">
+                                            <div class="px-2 text-center">
+                                                <div class="fw-bold">{{ user.transactions|length }}</div>
+                                                <div class="small text-muted">Trades</div>
+                                            </div>
+                                            <div class="px-2 text-center">
+                                                <div class="fw-bold">{{ user.followers.count() }}</div>
+                                                <div class="small text-muted">Followers</div>
+                                            </div>
+                                            <div class="px-2 text-center">
+                                                <div class="fw-bold">{{ user.followed.count() }}</div>
+                                                <div class="small text-muted">Following</div>
+                                            </div>
+                                        </div>
                                         <div>
-                                            <form action="{{ url_for('social.unfollow_user', user_id=user.id) }}" method="post">
-                                                <button type="submit" class="btn btn-outline-primary btn-sm">
-                                                    <i class="fas fa-user-minus me-1"></i> Unfollow
-                                                </button>
-                                            </form>
+                                            {% if profile_user.id == current_user.id %}
+                                                <form action="{{ url_for('social.unfollow_user', user_id=user.id) }}" method="post">
+                                                    <button type="submit" class="btn btn-outline-primary btn-sm">
+                                                        <i class="fas fa-user-minus me-1"></i> Unfollow
+                                                    </button>
+                                                </form>
+                                            {% else %}
+                                                {% if current_user.is_following(user) %}
+                                                    <form action="{{ url_for('social.unfollow_user', user_id=user.id) }}" method="post">
+                                                        <button type="submit" class="btn btn-outline-primary btn-sm">
+                                                            <i class="fas fa-user-minus me-1"></i> Unfollow
+                                                        </button>
+                                                    </form>
+                                                {% else %}
+                                                    <form action="{{ url_for('social.follow_user', user_id=user.id) }}" method="post">
+                                                        <button type="submit" class="btn btn-primary btn-sm">
+                                                            <i class="fas fa-user-plus me-1"></i> Follow
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                            {% endif %}
                                         </div>
                                     </div>
                                     
-                                    <!-- Optional: Recent Activity -->
-                                    {% if user.recent_post %}
+                                    <!-- Optional: Recent Activity (only shown on larger screens) -->
+                                    {% if user.recent_post and false %}
                                         <div class="mt-2 border-top pt-2">
                                             <div class="small text-muted">Recent Trading Activity:</div>
                                             <div class="d-flex align-items-center mt-1">
@@ -65,10 +101,17 @@
                             <div class="mb-3">
                                 <i class="fas fa-user-friends fa-3x text-muted"></i>
                             </div>
-                            <h3 class="h5">You're not following anyone yet</h3>
-                            <p class="text-muted">
-                                Follow other Yale traders to see their activities in your feed.
-                            </p>
+                            {% if profile_user.id == current_user.id %}
+                                <h3 class="h5">You're not following anyone yet</h3>
+                                <p class="text-muted">
+                                    Follow other Yale traders to see their activities in your feed.
+                                </p>
+                            {% else %}
+                                <h3 class="h5">{{ profile_user.first_name }} isn't following anyone yet</h3>
+                                <p class="text-muted">
+                                    When {{ profile_user.first_name }} follows other traders, they'll appear here.
+                                </p>
+                            {% endif %}
                             <a href="{{ url_for('social.search_users') }}" class="btn btn-primary">
                                 <i class="fas fa-search me-1"></i> Find Yale Traders
                             </a>
@@ -80,7 +123,11 @@
                     <div class="card-footer">
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="text-muted small">
-                                Following {{ followed_users|length }} {{ 'person' if followed_users|length == 1 else 'people' }}
+                                {% if profile_user.id == current_user.id %}
+                                    Following {{ followed_users|length }} {{ 'person' if followed_users|length == 1 else 'people' }}
+                                {% else %}
+                                    {{ profile_user.first_name }} follows {{ followed_users|length }} {{ 'person' if followed_users|length == 1 else 'people' }}
+                                {% endif %}
                             </div>
                             <a href="{{ url_for('social.search_users') }}" class="btn btn-primary btn-sm">
                                 <i class="fas fa-search me-1"></i> Find More Traders
@@ -91,7 +138,7 @@
             </div>
             
             <!-- Suggested Users -->
-            {% if followed_users %}
+            {% if followed_users and profile_user.id == current_user.id %}
                 <div class="card shadow mt-4">
                     <div class="card-header bg-light">
                         <h3 class="h5 mb-0">Suggested for You</h3>

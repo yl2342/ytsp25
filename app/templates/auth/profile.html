@@ -73,20 +73,24 @@
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">
-                            <div class="card bg-light">
-                                <div class="card-body text-center">
-                                    <h5 class="text-muted">Following</h5>
-                                    <h3 class="mb-0">{{ current_user.followed.count() }}</h3>
+                            <a href="{{ url_for('social.following') }}" class="text-decoration-none">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h5 class="text-muted">Following</h5>
+                                        <h3 class="mb-0">{{ current_user.followed.count() }}</h3>
+                                    </div>
                                 </div>
-                            </div>
+                            </a>
                         </div>
                         <div class="col-md-4 mb-4">
-                            <div class="card bg-light">
-                                <div class="card-body text-center">
-                                    <h5 class="text-muted">Followers</h5>
-                                    <h3 class="mb-0">{{ current_user.followers.count() }}</h3>
+                            <a href="{{ url_for('social.followers') }}" class="text-decoration-none">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h5 class="text-muted">Followers</h5>
+                                        <h3 class="mb-0">{{ current_user.followers.count() }}</h3>
+                                    </div>
                                 </div>
-                            </div>
+                            </a>
                         </div>
                     </div>
                 </div>

@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import current_user, login_required
 from app import db
-from app.models.user import User
+from app.models.user import User, followers as followers_table
 from app.models.social import TradingPost, Comment
 from app.forms import UserSearchForm, PostCommentForm, ReplyForm
 from app.utils.stock_utils import get_trending_stocks, get_popular_stocks
@@ -123,28 +123,48 @@ def unfollow_user(user_id):
 
 
 @social_bp.route('/following')
+@social_bp.route('/following/<int:user_id>')
 @login_required
-def following():
+def following(user_id=None):
     """Show users that the current user is following"""
-    followed_users = current_user.followed.all()
+    if user_id is None:
+        user = current_user
+        title = 'People I Follow'
+    else:
+        user = User.query.get_or_404(user_id)
+        title = f"People {user.first_name} Follows"
+    
+    followed_users = user.followed.all()
     
     return render_template('social/following.html',
-                           title='People I Follow',
-                           followed_users=followed_users)
+                           title=title,
+                           followed_users=followed_users,
+                           profile_user=user)
 
 
 @social_bp.route('/followers')
+@social_bp.route('/followers/<int:user_id>')
 @login_required
-def followers():
+def followers(user_id=None):
     """Show users who follow the current user"""
-    followers = User.query.join(
-        User.followed,
-        (User.followed.any(id=current_user.id))
+    if user_id is None:
+        user = current_user
+        title = 'My Followers'
+    else:
+        user = User.query.get_or_404(user_id)
+        title = f"{user.first_name}'s Followers"
+    
+    follower_users = User.query.join(
+        followers_table, 
+        (followers_table.c.follower_id == User.id)
+    ).filter(
+        followers_table.c.followed_id == user.id
     ).all()
     
     return render_template('social/followers.html',
-                           title='My Followers',
-                           followers=followers)
+                           title=title,
+                           followers=follower_users,
+                           profile_user=user)
 
 
 @social_bp.route('/feed')

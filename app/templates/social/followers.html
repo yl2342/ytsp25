@@ -8,7 +8,13 @@
         <div class="col-lg-8 mx-auto">
             <div class="card shadow">
                 <div class="card-header bg-primary text-white">
-                    <h2 class="h4 mb-0"><i class="fas fa-users me-2"></i>My Followers</h2>
+                    <h2 class="h4 mb-0"><i class="fas fa-users me-2"></i>
+                        {% if profile_user.id == current_user.id %}
+                            My Followers
+                        {% else %}
+                            {{ profile_user.first_name }}'s Followers
+                        {% endif %}
+                    </h2>
                 </div>
                 <div class="card-body p-0">
                     {% if followers %}
@@ -16,18 +22,39 @@
                             {% for user in followers %}
                                 <div class="list-group-item p-3">
                                     <div class="d-flex align-items-center">
+                                        <!-- User profile image -->
                                         <div class="flex-shrink-0">
                                             <img src="{{ url_for('static', filename='img/avatars/default.png') }}" 
                                                  alt="{{ user.first_name }}" class="rounded-circle" width="50" height="50">
                                         </div>
+                                        
+                                        <!-- User info -->
                                         <div class="ms-3 flex-grow-1">
-                                            <h4 class="h6 mb-0">
+                                            <h3 class="h6 mb-1">
                                                 <a href="{{ url_for('social.user_profile', user_id=user.id) }}" class="text-decoration-none">
                                                     {{ user.first_name }} {{ user.last_name }}
                                                 </a>
-                                            </h4>
+                                            </h3>
                                             <div class="text-muted small">{{ user.net_id }}</div>
                                         </div>
+                                        
+                                        <!-- User stats -->
+                                        <div class="d-none d-md-flex me-3">
+                                            <div class="px-2 text-center">
+                                                <div class="fw-bold">{{ user.transactions|length }}</div>
+                                                <div class="small text-muted">Trades</div>
+                                            </div>
+                                            <div class="px-2 text-center">
+                                                <div class="fw-bold">{{ user.followers.count() }}</div>
+                                                <div class="small text-muted">Followers</div>
+                                            </div>
+                                            <div class="px-2 text-center">
+                                                <div class="fw-bold">{{ user.followed.count() }}</div>
+                                                <div class="small text-muted">Following</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Action buttons -->
                                         <div>
                                             {% if current_user.is_following(user) %}
                                                 <form action="{{ url_for('social.unfollow_user', user_id=user.id) }}" method="post">
@@ -44,24 +71,6 @@
                                             {% endif %}
                                         </div>
                                     </div>
-                                    
-                                    <!-- Optional: Profile Stats -->
-                                    <div class="mt-2 pt-2 border-top">
-                                        <div class="row g-0 text-center">
-                                            <div class="col-4">
-                                                <div class="fw-bold">{{ user.transactions.count() }}</div>
-                                                <div class="small text-muted">Trades</div>
-                                            </div>
-                                            <div class="col-4">
-                                                <div class="fw-bold">{{ user.followers.count() }}</div>
-                                                <div class="small text-muted">Followers</div>
-                                            </div>
-                                            <div class="col-4">
-                                                <div class="fw-bold">{{ user.followed.count() }}</div>
-                                                <div class="small text-muted">Following</div>
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
                             {% endfor %}
                         </div>
@@ -70,10 +79,17 @@
                             <div class="mb-3">
                                 <i class="fas fa-users fa-3x text-muted"></i>
                             </div>
-                            <h3 class="h5">You don't have any followers yet</h3>
-                            <p class="text-muted">
-                                When other Yale traders follow you, they'll appear here.
-                            </p>
+                            {% if profile_user.id == current_user.id %}
+                                <h3 class="h5">You don't have any followers yet</h3>
+                                <p class="text-muted">
+                                    When other Yale traders follow you, they'll appear here.
+                                </p>
+                            {% else %}
+                                <h3 class="h5">{{ profile_user.first_name }} doesn't have any followers yet</h3>
+                                <p class="text-muted">
+                                    When other Yale traders follow {{ profile_user.first_name }}, they'll appear here.
+                                </p>
+                            {% endif %}
                             <a href="{{ url_for('social.search_users') }}" class="btn btn-primary">
                                 <i class="fas fa-search me-1"></i> Find Yale Traders
                             </a>
@@ -85,7 +101,12 @@
                     <div class="card-footer">
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="text-muted small">
-                                {{ followers|length }} {{ 'person' if followers|length == 1 else 'people' }} following you
+                                {{ followers|length }} {{ 'person' if followers|length == 1 else 'people' }} 
+                                {% if profile_user.id == current_user.id %}
+                                    following you
+                                {% else %}
+                                    following {{ profile_user.first_name }}
+                                {% endif %}
                             </div>
                             <a href="{{ url_for('social.search_users') }}" class="btn btn-primary btn-sm">
                                 <i class="fas fa-search me-1"></i> Find Yale Traders
