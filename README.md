@@ -74,4 +74,42 @@ This is an MVP focused on backend functionality. Future iterations will improve 
 Run tests with:
 ```
 pytest
-``` 
+```
+
+## Setting Up Stock Trading Functionality
+
+The application uses Yahoo Finance (yfinance) for retrieving stock data, which doesn't require an API key. This means you can search for and trade stocks without any additional configuration.
+
+### Searching for Stocks
+
+1. Enter a ticker symbol (e.g., AAPL, MSFT) or company name in the search field
+2. Click "Search" to retrieve stock information
+3. You can then view stock details and place trades
+
+### Supported Features
+
+- Real-time stock quotes
+- Historical price data
+- Company information and financials
+- Buy and sell functionality
+- Portfolio tracking
+
+### Common Stock Tickers
+
+The search functionality works best with well-known stock tickers such as:
+- AAPL (Apple)
+- MSFT (Microsoft)
+- GOOGL (Alphabet/Google)
+- AMZN (Amazon)
+- META (Meta/Facebook)
+- TSLA (Tesla)
+- NVDA (NVIDIA)
+- And many more
+
+### Troubleshooting
+
+If you're having issues with stock data:
+1. Try searching for a well-known ticker symbol like AAPL or MSFT
+2. Ensure you're connected to the internet
+3. Check the application logs for any errors
+4. Restart the application if issues persist 

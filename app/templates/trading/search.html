@@ -14,7 +14,7 @@
                     <form method="POST" action="{{ url_for('trading.stock_search') }}">
                         {{ form.hidden_tag() }}
                         <div class="input-group mb-3">
-                            {{ form.ticker(class="form-control", placeholder="Enter stock ticker or company name") }}
+                            {{ form.ticker(class="form-control", placeholder="Enter stock ticker, eg. AAPL for Apple Inc.") }}
                             <button class="btn btn-primary" type="submit">
                                 <i class="fas fa-search"></i> Search
                             </button>
@@ -76,7 +76,7 @@
         <div class="col-lg-4 mt-4 mt-lg-0">
             <div class="card shadow mb-4">
                 <div class="card-header bg-light">
-                    <h3 class="h5 mb-0">Popular Stocks</h3>
+                    <h3 class="h5 mb-0">Trending Stocks</h3>
                 </div>
                 <div class="card-body">
                     <div class="list-group">
@@ -116,7 +116,7 @@
                                 <i class="fas fa-chevron-right text-muted"></i>
                             </div>
                         </a>
-                        <a href="{{ url_for('trading.stock_detail', ticker='FB') }}" class="list-group-item list-group-item-action">
+                        <a href="{{ url_for('trading.stock_detail', ticker='META') }}" class="list-group-item list-group-item-action">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <span class="fw-bold">META</span>

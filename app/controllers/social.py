@@ -4,6 +4,10 @@ from app import db
 from app.models.user import User
 from app.models.social import TradingPost, Comment
 from app.forms import UserSearchForm, PostCommentForm, ReplyForm
+from app.utils.stock_utils import get_trending_stocks, get_popular_stocks
+import logging
+
+logger = logging.getLogger(__name__)
 
 social_bp = Blueprint('social', __name__)
 
@@ -115,26 +119,39 @@ def followers():
 @login_required
 def feed():
     """Show social feed of posts from followed users"""
-    # Get posts from followed users
-    followed_posts = current_user.followed_posts().all()
-    
-    # Get global popular posts (that aren't already in followed posts)
-    followed_user_ids = [user.id for user in current_user.followed.all()]
-    followed_user_ids.append(current_user.id)  # Add current user ID
-    
-    # Get popular posts (most liked, most recent)
-    popular_posts = TradingPost.query.filter(
-        TradingPost.user_id.notin_(followed_user_ids),
-        TradingPost.is_public == True
-    ).order_by(
-        TradingPost.likes.desc(),
-        TradingPost.created_at.desc()
-    ).limit(10).all()
-    
-    return render_template('social/feed.html',
-                           title='Social Feed',
-                           followed_posts=followed_posts,
-                           popular_posts=popular_posts)
+    try:
+        # Get posts from followed users
+        followed_posts = current_user.followed_posts().all()
+        
+        # Get global popular posts (that aren't already in followed posts)
+        followed_user_ids = [user.id for user in current_user.followed.all()]
+        followed_user_ids.append(current_user.id)  # Add current user ID
+        
+        # Get popular posts (most liked, most recent)
+        popular_posts = TradingPost.query.filter(
+            TradingPost.user_id.notin_(followed_user_ids),
+            TradingPost.is_public == True
+        ).order_by(
+            TradingPost.likes.desc(),
+            TradingPost.created_at.desc()
+        ).limit(10).all()
+        
+        # Get trending stocks for the sidebar
+        trending_stocks = get_trending_stocks()
+        
+        return render_template('social/feed.html',
+                            title='Social Feed',
+                            followed_posts=followed_posts,
+                            popular_posts=popular_posts,
+                            trending_stocks=trending_stocks)
+    except Exception as e:
+        logger.error(f"Error loading social feed for user {current_user.id}: {str(e)}")
+        flash("An error occurred while loading your feed. Please try again.", "danger")
+        return render_template('social/feed.html',
+                            title='Social Feed',
+                            followed_posts=[],
+                            popular_posts=[],
+                            trending_stocks=[])
 
 
 @social_bp.route('/post/<int:post_id>')

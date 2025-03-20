@@ -2,76 +2,116 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import current_user, login_required
 from app import db
 from app.forms import StockSearchForm, TradeForm
-from app.utils.stock_utils import get_stock_info, get_stock_historical_data, search_stocks
+from app.utils.stock_utils import get_stock_info, get_stock_historical_data, search_stocks, get_popular_stocks
 from app.utils.trading_utils import execute_buy, execute_sell, get_portfolio_summary
 from app.models.stock import StockHolding, Transaction
+import logging
 
 trading_bp = Blueprint('trading', __name__)
+
+logger = logging.getLogger(__name__)
 
 @trading_bp.route('/search', methods=['GET', 'POST'])
 @login_required
 def stock_search():
-    form = StockSearchForm()
-    results = []
-    searched = False
-    
-    if form.validate_on_submit() or request.args.get('ticker'):
-        ticker = form.ticker.data or request.args.get('ticker')
-        ticker = ticker.upper().strip()
-        searched = True
+    try:
+        form = StockSearchForm()
+        results = []
+        searched = False
         
-        # First try direct lookup by ticker
-        stock_info = get_stock_info(ticker)
-        if stock_info:
-            results = [stock_info]
-        else:
-            # If direct lookup fails, try search
-            results = search_stocks(ticker)
-    
-    return render_template('trading/search.html', 
-                           title='Stock Search',
-                           form=form,
-                           results=results,
-                           searched=searched)
+        if form.validate_on_submit() or request.args.get('ticker'):
+            ticker = form.ticker.data or request.args.get('ticker')
+            ticker = ticker.upper().strip()
+            searched = True
+            
+            logger.info(f"Searching for stock with ticker/query: '{ticker}'")
+            
+            # First try direct lookup by ticker
+            stock_info = get_stock_info(ticker)
+            if stock_info:
+                logger.info(f"Direct ticker lookup successful for '{ticker}'")
+                results = [stock_info]
+            else:
+                # If direct lookup fails, try search
+                logger.info(f"Direct ticker lookup failed for '{ticker}', trying search")
+                results = search_stocks(ticker)
+                
+            logger.info(f"Found {len(results)} results for search '{ticker}'")
+            
+            if not results:
+                flash(f"No stocks found matching '{ticker}'. Try another search term or ticker symbol.", "warning")
+        
+        # Get popular stocks for the sidebar
+        popular_stocks = get_popular_stocks()
+                
+        return render_template('trading/search.html', 
+                            title='Stock Search',
+                            form=form,
+                            results=results,
+                            searched=searched,
+                            popular_stocks=popular_stocks)
+    except Exception as e:
+        logger.error(f"Error in stock_search: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        flash("An error occurred while searching for stocks. Please try again.", "danger")
+        return render_template('trading/search.html', 
+                            title='Stock Search',
+                            form=form,
+                            results=[],
+                            searched=False,
+                            popular_stocks=[])
 
 
 @trading_bp.route('/stock/<ticker>')
 @login_required
 def stock_detail(ticker):
-    ticker = ticker.upper()
-    stock_info = get_stock_info(ticker)
-    
-    if not stock_info:
-        flash(f"Could not find information for ticker: {ticker}", "danger")
+    try:
+        ticker = ticker.upper()
+        logger.info(f"Accessing stock detail for ticker: {ticker}")
+        
+        stock_info = get_stock_info(ticker)
+        
+        if not stock_info:
+            logger.warning(f"No stock information found for ticker: {ticker}")
+            flash(f"Could not find information for ticker: {ticker}", "danger")
+            return redirect(url_for('trading.stock_search'))
+        
+        logger.info(f"Successfully retrieved stock info for {ticker}: {stock_info['name']}")
+        
+        # Get historical data for charts
+        historical_data = get_stock_historical_data(ticker, period='6mo')
+        
+        # Check if user owns this stock
+        user_holding = StockHolding.query.filter_by(user_id=current_user.id, ticker=ticker).first()
+        
+        # Create trade form
+        trade_form = TradeForm()
+        trade_form.ticker.data = ticker
+        trade_form.company_name.data = stock_info['name']
+        trade_form.price.data = stock_info['current_price']
+        
+        # Get user's recent transactions for this stock
+        recent_transactions = Transaction.query.filter_by(
+            user_id=current_user.id, 
+            ticker=ticker
+        ).order_by(
+            Transaction.timestamp.desc()
+        ).limit(5).all()
+        
+        return render_template('trading/stock_detail.html',
+                            title=f"{ticker} - {stock_info['name']}",
+                            stock=stock_info,
+                            historical_data=historical_data,
+                            user_holding=user_holding,
+                            trade_form=trade_form,
+                            recent_transactions=recent_transactions)
+    except Exception as e:
+        logger.error(f"Error in stock_detail for ticker {ticker}: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        flash(f"An error occurred while retrieving stock information. Please try again.", "danger")
         return redirect(url_for('trading.stock_search'))
-    
-    # Get historical data for charts
-    historical_data = get_stock_historical_data(ticker, period='6mo')
-    
-    # Check if user owns this stock
-    user_holding = StockHolding.query.filter_by(user_id=current_user.id, ticker=ticker).first()
-    
-    # Create trade form
-    trade_form = TradeForm()
-    trade_form.ticker.data = ticker
-    trade_form.company_name.data = stock_info['name']
-    trade_form.price.data = stock_info['current_price']
-    
-    # Get user's recent transactions for this stock
-    recent_transactions = Transaction.query.filter_by(
-        user_id=current_user.id, 
-        ticker=ticker
-    ).order_by(
-        Transaction.timestamp.desc()
-    ).limit(5).all()
-    
-    return render_template('trading/stock_detail.html',
-                           title=f"{ticker} - {stock_info['name']}",
-                           stock=stock_info,
-                           historical_data=historical_data,
-                           user_holding=user_holding,
-                           trade_form=trade_form,
-                           recent_transactions=recent_transactions)
 
 
 @trading_bp.route('/trade', methods=['POST'])

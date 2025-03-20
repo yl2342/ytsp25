@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for
 from flask_login import current_user, login_required
-from app.utils.stock_utils import get_market_summary
+from app.utils.stock_utils import get_market_summary, get_trending_stocks, get_popular_stocks
 from app.utils.trading_utils import get_portfolio_summary
 from app.models.social import TradingPost
 import logging
@@ -38,6 +38,10 @@ def dashboard():
         # Get market summary
         market_indices = get_market_summary()
         
+        # Get trending and popular stocks
+        trending_stocks = get_trending_stocks()
+        popular_stocks = get_popular_stocks()
+        
         # Get recent activity from people the user follows
         followed_posts = current_user.followed_posts().limit(10).all()
         
@@ -74,7 +78,7 @@ def dashboard():
             all_transactions, 
             key=lambda x: x['timestamp'], 
             reverse=True
-        )[:5]  # Limit to 5 most recent
+        )[:5]
         
         # Get global activity feed (public posts)
         global_posts = TradingPost.query.filter_by(is_public=True)\
@@ -93,6 +97,8 @@ def dashboard():
             'total_profit_loss_percent': 0
         }
         market_indices = []
+        trending_stocks = []
+        popular_stocks = []
         followed_posts = []
         recent_transactions = []
         global_posts = []
@@ -101,6 +107,8 @@ def dashboard():
                            title='Dashboard',
                            portfolio=portfolio,
                            market_indices=market_indices,
+                           trending_stocks=trending_stocks,
+                           popular_stocks=popular_stocks,
                            followed_posts=followed_posts,
                            recent_transactions=recent_transactions,
                            global_posts=global_posts)
