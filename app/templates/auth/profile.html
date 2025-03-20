@@ -1,0 +1,203 @@
+{% extends "layout.html" %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <!-- User Profile Information -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 mb-0"><i class="fas fa-user-circle me-2"></i>Profile Information</h2>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="display-1 text-muted mb-3">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <h3>{{ current_user.first_name }} {{ current_user.last_name }}</h3>
+                        <p class="text-muted">{{ current_user.net_id }}</p>
+                    </div>
+                    
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-calendar-alt me-2"></i>Member Since:</span>
+                            <span class="badge bg-light text-dark">{{ current_user.created_at_edt.strftime('%b %d, %Y') }}</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-sign-in-alt me-2"></i>Last Login:</span>
+                            <span class="badge bg-light text-dark">{{ current_user.last_login_edt.strftime('%b %d, %Y, %I:%M %p') }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Account Statistics -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 mb-0"><i class="fas fa-chart-pie me-2"></i>Account Statistics</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="text-muted">Current Balance</h5>
+                                    <h3 class="mb-0">${{ current_user.balance|round(2) }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="text-muted">Portfolio Value</h5>
+                                    <h3 class="mb-0">${{ current_user.get_portfolio_value()|round(2) }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="text-muted">Holdings</h5>
+                                    <h3 class="mb-0">{{ current_user.portfolio|length }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="text-muted">Following</h5>
+                                    <h3 class="mb-0">{{ current_user.followed.count() }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="text-muted">Followers</h5>
+                                    <h3 class="mb-0">{{ current_user.followers.count() }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Transactions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 mb-0"><i class="fas fa-history me-2"></i>Recent Transactions</h2>
+                </div>
+                <div class="card-body">
+                    <ul class="nav nav-tabs mb-3" id="transactionTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="cash-tab" data-bs-toggle="tab" data-bs-target="#cash" type="button" role="tab">
+                                <i class="fas fa-money-bill-wave me-1"></i>Cash Transactions
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="stock-tab" data-bs-toggle="tab" data-bs-target="#stock" type="button" role="tab">
+                                <i class="fas fa-exchange-alt me-1"></i>Stock Transactions
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content" id="transactionTabsContent">
+                        <!-- Cash Transactions Tab -->
+                        <div class="tab-pane fade show active" id="cash" role="tabpanel" aria-labelledby="cash-tab">
+                            {% if current_user.cash_transactions %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Date & Time (EDT)</th>
+                                                <th>Type</th>
+                                                <th>Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for transaction in current_user.cash_transactions|sort(attribute='timestamp', reverse=true) %}
+                                                {% if loop.index <= 10 %}
+                                                <tr>
+                                                    <td>{{ transaction.timestamp.strftime('%b %d, %Y, %I:%M %p') }}</td>
+                                                    <td>
+                                                        {% if transaction.transaction_type == 'deposit' %}
+                                                            <span class="badge bg-success"><i class="fas fa-plus-circle me-1"></i>Deposit</span>
+                                                        {% else %}
+                                                            <span class="badge bg-warning text-dark"><i class="fas fa-minus-circle me-1"></i>Withdrawal</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>${{ transaction.amount|round(2) }}</td>
+                                                </tr>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>No cash transactions found.
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Stock Transactions Tab -->
+                        <div class="tab-pane fade" id="stock" role="tabpanel" aria-labelledby="stock-tab">
+                            {% if current_user.transactions %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Date & Time</th>
+                                                <th>Ticker</th>
+                                                <th>Type</th>
+                                                <th>Quantity</th>
+                                                <th>Price</th>
+                                                <th>Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for transaction in current_user.transactions|sort(attribute='timestamp', reverse=true) %}
+                                                {% if loop.index <= 10 %}
+                                                <tr>
+                                                    <td>{{ transaction.timestamp.strftime('%b %d, %Y, %I:%M %p') }}</td>
+                                                    <td class="fw-bold">{{ transaction.ticker }}</td>
+                                                    <td>
+                                                        {% if transaction.transaction_type == 'buy' %}
+                                                            <span class="badge bg-success"><i class="fas fa-shopping-cart me-1"></i>Buy</span>
+                                                        {% else %}
+                                                            <span class="badge bg-danger"><i class="fas fa-donate me-1"></i>Sell</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>{{ transaction.quantity }}</td>
+                                                    <td>${{ transaction.price|round(2) }}</td>
+                                                    <td>${{ transaction.total_amount|round(2) }}</td>
+                                                </tr>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>No stock transactions found.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
