@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime,timezone
+import zoneinfo
 from app import db
 from sqlalchemy.sql import func
 
@@ -63,7 +64,7 @@ class Transaction(db.Model):
     quantity = db.Column(db.Float, nullable=False)
     price = db.Column(db.Float, nullable=False)
     total_amount = db.Column(db.Float, nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, default= datetime.now(zoneinfo.ZoneInfo("America/New_York")))
     trading_post_id = db.Column(db.Integer, db.ForeignKey('trading_post.id'), nullable=True)
 
     def __init__(self, user_id, ticker, transaction_type, quantity, price):
@@ -83,7 +84,7 @@ class CashTransaction(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     transaction_type = db.Column(db.String(10), nullable=False)  # 'deposit' or 'withdraw'
     amount = db.Column(db.Float, nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, default=datetime.now(zoneinfo.ZoneInfo("America/New_York")))
 
     def __init__(self, user_id, transaction_type, amount):
         self.user_id = user_id

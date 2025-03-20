@@ -36,9 +36,10 @@
                                     
                                     <!-- Post Content -->
                                     <div class="mb-3">
-                                        <div class="alert {% if post.transaction.action == 'buy' %}alert-success{% else %}alert-danger{% endif %} mb-3">
+                                        {% if post.transaction %}
+                                        <div class="alert {% if post.transaction.transaction_type == 'buy' %}alert-success{% else %}alert-danger{% endif %} mb-3">
                                             <div class="fw-bold">
-                                                {{ post.transaction.action|upper }}ED {{ post.transaction.quantity|int }} 
+                                                {{ post.transaction.transaction_type|upper }}ED {{ post.transaction.quantity|int }} 
                                                 shares of {{ post.transaction.ticker }} @ ${{ post.transaction.price|round(2) }}
                                             </div>
                                             <div class="d-flex justify-content-between mt-2">
@@ -46,6 +47,18 @@
                                                 <div>{{ post.transaction.timestamp.strftime('%m/%d/%Y') }}</div>
                                             </div>
                                         </div>
+                                        {% else %}
+                                        <div class="alert {% if post.trade_type == 'buy' %}alert-success{% else %}alert-danger{% endif %} mb-3">
+                                            <div class="fw-bold">
+                                                {{ post.trade_type|upper }}ED {{ post.quantity|int }} 
+                                                shares of {{ post.ticker }} @ ${{ post.price|round(2) }}
+                                            </div>
+                                            <div class="d-flex justify-content-between mt-2">
+                                                <div>Total: ${{ (post.quantity * post.price)|round(2) }}</div>
+                                                <div>{{ post.created_at.strftime('%m/%d/%Y') }}</div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
                                         
                                         {% if post.content %}
                                             <p>{{ post.content }}</p>
@@ -74,7 +87,7 @@
                                             <a href="{{ url_for('social.view_post', post_id=post.id) }}" class="btn btn-sm btn-outline-primary">
                                                 <i class="far fa-comment me-1"></i> Comments ({{ post.comments|length }})
                                             </a>
-                                            <a href="{{ url_for('trading.stock_detail', ticker=post.transaction.ticker) }}" class="btn btn-sm btn-primary">
+                                            <a href="{{ url_for('trading.stock_detail', ticker=post.ticker) }}" class="btn btn-sm btn-primary">
                                                 <i class="fas fa-chart-line me-1"></i> View Stock
                                             </a>
                                         </div>
@@ -150,13 +163,24 @@
                                                 <a href="{{ url_for('social.user_profile', user_id=post.author.id) }}" class="fw-bold text-decoration-none">
                                                     {{ post.author.first_name }} {{ post.author.last_name }}
                                                 </a>
-                                                <span class="badge {% if post.transaction.action == 'buy' %}bg-success{% else %}bg-danger{% endif %} ms-1">
-                                                    {{ post.transaction.action|upper }}
+                                                {% if post.transaction %}
+                                                <span class="badge {% if post.transaction.transaction_type == 'buy' %}bg-success{% else %}bg-danger{% endif %} ms-1">
+                                                    {{ post.transaction.transaction_type|upper }}
                                                 </span>
+                                                {% else %}
+                                                <span class="badge {% if post.trade_type == 'buy' %}bg-success{% else %}bg-danger{% endif %} ms-1">
+                                                    {{ post.trade_type|upper }}
+                                                </span>
+                                                {% endif %}
                                             </div>
                                             <div class="small mb-2">
+                                                {% if post.transaction %}
                                                 {{ post.transaction.quantity|int }} shares of {{ post.transaction.ticker }}
                                                 @ ${{ post.transaction.price|round(2) }}
+                                                {% else %}
+                                                {{ post.quantity|int }} shares of {{ post.ticker }}
+                                                @ ${{ post.price|round(2) }}
+                                                {% endif %}
                                             </div>
                                             {% if post.content %}
                                                 <p class="small mb-1">{{ post.content|truncate(100) }}</p>

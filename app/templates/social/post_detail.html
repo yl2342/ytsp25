@@ -29,9 +29,10 @@
                     
                     <!-- Post Content -->
                     <div class="mb-4">
-                        <div class="alert {% if post.transaction.action == 'buy' %}alert-success{% else %}alert-danger{% endif %} mb-3">
+                        {% if post.transaction %}
+                        <div class="alert {% if post.transaction.transaction_type == 'buy' %}alert-success{% else %}alert-danger{% endif %} mb-3">
                             <div class="fw-bold">
-                                {{ post.transaction.action|upper }}ED {{ post.transaction.quantity|int }} 
+                                {{ post.transaction.transaction_type|upper }}ED {{ post.transaction.quantity|int }} 
                                 shares of {{ post.transaction.ticker }} @ ${{ post.transaction.price|round(2) }}
                             </div>
                             <div class="d-flex justify-content-between mt-2">
@@ -39,6 +40,18 @@
                                 <div>{{ post.transaction.timestamp.strftime('%m/%d/%Y') }}</div>
                             </div>
                         </div>
+                        {% else %}
+                        <div class="alert {% if post.trade_type == 'buy' %}alert-success{% else %}alert-danger{% endif %} mb-3">
+                            <div class="fw-bold">
+                                {{ post.trade_type|upper }}ED {{ post.quantity|int }} 
+                                shares of {{ post.ticker }} @ ${{ post.price|round(2) }}
+                            </div>
+                            <div class="d-flex justify-content-between mt-2">
+                                <div>Total: ${{ (post.quantity * post.price)|round(2) }}</div>
+                                <div>{{ post.created_at.strftime('%m/%d/%Y') }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
                         
                         {% if post.content %}
                             <p class="lead">{{ post.content }}</p>
@@ -63,8 +76,8 @@
                                 <span id="post-dislikes-{{ post.id }}">{{ post.dislikes }}</span>
                             </button>
                         </div>
-                        <a href="{{ url_for('trading.stock_detail', ticker=post.transaction.ticker) }}" class="btn btn-primary">
-                            <i class="fas fa-chart-line me-1"></i> View {{ post.transaction.ticker }}
+                        <a href="{{ url_for('trading.stock_detail', ticker=post.ticker) }}" class="btn btn-primary">
+                            <i class="fas fa-chart-line me-1"></i> View {{ post.ticker }}
                         </a>
                     </div>
                 </div>
@@ -109,13 +122,13 @@
                                     <div class="d-flex">
                                         <div class="flex-shrink-0">
                                             <img src="{{ url_for('static', filename='img/avatars/default.png') }}" 
-                                                 alt="{{ comment.user.first_name }}" class="rounded-circle" width="40" height="40">
+                                                 alt="{{ comment.author.first_name }}" class="rounded-circle" width="40" height="40">
                                         </div>
                                         <div class="ms-3 flex-grow-1">
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <h4 class="h6 mb-0">
-                                                    <a href="{{ url_for('social.user_profile', user_id=comment.user.id) }}" class="text-decoration-none">
-                                                        {{ comment.user.first_name }} {{ comment.user.last_name }}
+                                                    <a href="{{ url_for('social.user_profile', user_id=comment.author.id) }}" class="text-decoration-none">
+                                                        {{ comment.author.first_name }} {{ comment.author.last_name }}
                                                     </a>
                                                 </h4>
                                                 <small class="text-muted">
@@ -155,13 +168,13 @@
                                                             <div class="d-flex">
                                                                 <div class="flex-shrink-0">
                                                                     <img src="{{ url_for('static', filename='img/avatars/default.png') }}" 
-                                                                         alt="{{ reply.user.first_name }}" class="rounded-circle" width="32" height="32">
+                                                                         alt="{{ reply.author.first_name }}" class="rounded-circle" width="32" height="32">
                                                                 </div>
                                                                 <div class="ms-2">
                                                                     <div class="d-flex align-items-center">
                                                                         <h5 class="h6 mb-0">
-                                                                            <a href="{{ url_for('social.user_profile', user_id=reply.user.id) }}" class="text-decoration-none">
-                                                                                {{ reply.user.first_name }} {{ reply.user.last_name }}
+                                                                            <a href="{{ url_for('social.user_profile', user_id=reply.author.id) }}" class="text-decoration-none">
+                                                                                {{ reply.author.first_name }} {{ reply.author.last_name }}
                                                                             </a>
                                                                         </h5>
                                                                         <small class="text-muted ms-2">

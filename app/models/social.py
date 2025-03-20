@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, timezone
+import zoneinfo
 from app import db
 from sqlalchemy.sql import func
 
@@ -12,7 +13,7 @@ class TradingPost(db.Model):
     quantity = db.Column(db.Float, nullable=False)
     price = db.Column(db.Float, nullable=False)
     is_public = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(zoneinfo.ZoneInfo("America/New_York")))
     
     # Relationships
     likes = db.Column(db.Integer, default=0)
@@ -50,7 +51,7 @@ class Comment(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     parent_id = db.Column(db.Integer, db.ForeignKey('comment.id'), nullable=True)
     content = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(zoneinfo.ZoneInfo("America/New_York")))
     
     # Replies to this comment
     replies = db.relationship('Comment', backref=db.backref('parent', remote_side=[id]), lazy=True)

@@ -5,6 +5,8 @@ from app.models.user import User
 from app.models.social import TradingPost, Comment
 from app.forms import UserSearchForm, PostCommentForm, ReplyForm
 from app.utils.stock_utils import get_trending_stocks, get_popular_stocks
+from app.models.stock import Transaction
+from app.models.stock import StockHolding
 import logging
 
 logger = logging.getLogger(__name__)
@@ -48,14 +50,41 @@ def user_profile(user_id):
         TradingPost.created_at.desc()
     ).all()
     
-    # Check if current user is following this user
+    # Get user's public stock transactions
+    public_transactions = Transaction.query.join(
+        TradingPost, 
+        Transaction.trading_post_id == TradingPost.id
+    ).filter(
+        Transaction.user_id == user_id,
+        TradingPost.is_public == True
+    ).order_by(
+        Transaction.timestamp.desc()
+    ).all()
+    
+    # Get top holdings if this is the current user or if the current user is following this user
+    top_holdings = []
     is_following = current_user.is_following(user)
+    if user.id == current_user.id or is_following:
+        holdings = StockHolding.query.filter_by(user_id=user_id).order_by(StockHolding.current_price * StockHolding.quantity.desc()).limit(5).all()
+        total_value = sum(holding.get_market_value() for holding in holdings)
+        for holding in holdings:
+            if total_value > 0:
+                percentage = (holding.get_market_value() / total_value) * 100
+            else:
+                percentage = 0
+            top_holdings.append({
+                'ticker': holding.ticker,
+                'quantity': holding.quantity,
+                'percentage': percentage
+            })
     
     return render_template('social/user_profile.html',
                            title=f"{user.first_name} {user.last_name}'s Profile",
                            user=user,
                            posts=posts,
-                           is_following=is_following)
+                           is_following=is_following,
+                           public_transactions=public_transactions,
+                           holdings=top_holdings)
 
 
 @social_bp.route('/follow/<int:user_id>', methods=['POST'])

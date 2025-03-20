@@ -80,20 +80,26 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="list-group list-group-flush">
-                        {% for holding in user.holdings[:5] %}
-                            <a href="{{ url_for('trading.stock_detail', ticker=holding.ticker) }}" 
-                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                <div>
-                                    <div class="fw-bold">{{ holding.ticker }}</div>
-                                    <div class="small text-muted">{{ holding.quantity }} shares</div>
+                        {% if user.id == current_user.id or is_following %}
+                            {% for holding in holdings %}
+                                <a href="{{ url_for('trading.stock_detail', ticker=holding.ticker) }}" 
+                                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold">{{ holding.ticker }}</div>
+                                        <div class="small text-muted">{{ holding.quantity }} shares</div>
+                                    </div>
+                                    <div class="badge bg-primary">{{ holding.percentage|round }}%</div>
+                                </a>
+                            {% else %}
+                                <div class="list-group-item text-center text-muted">
+                                    No holdings to display
                                 </div>
-                                <div class="badge bg-primary">{{ holding.percentage|round }}%</div>
-                            </a>
+                            {% endfor %}
                         {% else %}
                             <div class="list-group-item text-center text-muted">
-                                No public holdings to display
+                                Follow this user to see their holdings
                             </div>
-                        {% endfor %}
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -128,14 +134,14 @@
                                     
                                     <!-- Post Content -->
                                     <div class="mb-3">
-                                        <div class="alert {% if post.transaction.action == 'buy' %}alert-success{% else %}alert-danger{% endif %} mb-3">
+                                        <div class="alert {% if post.trade_type == 'buy' %}alert-success{% else %}alert-danger{% endif %} mb-3">
                                             <div class="fw-bold">
-                                                {{ post.transaction.action|upper }}ED {{ post.transaction.quantity|int }} 
-                                                shares of {{ post.transaction.ticker }} @ ${{ post.transaction.price|round(2) }}
+                                                {{ post.trade_type|upper }}ED {{ post.quantity|int }} 
+                                                shares of {{ post.ticker }} @ ${{ post.price|round(2) }}
                                             </div>
                                             <div class="d-flex justify-content-between mt-2">
-                                                <div>Total: ${{ (post.transaction.quantity * post.transaction.price)|round(2) }}</div>
-                                                <div>{{ post.transaction.timestamp.strftime('%m/%d/%Y') }}</div>
+                                                <div>Total: ${{ (post.quantity * post.price)|round(2) }}</div>
+                                                <div>{{ post.created_at.strftime('%m/%d/%Y') }}</div>
                                             </div>
                                         </div>
                                         
@@ -166,7 +172,7 @@
                                             <a href="{{ url_for('social.view_post', post_id=post.id) }}" class="btn btn-sm btn-outline-primary">
                                                 <i class="far fa-comment me-1"></i> Comments ({{ post.comments|length }})
                                             </a>
-                                            <a href="{{ url_for('trading.stock_detail', ticker=post.transaction.ticker) }}" class="btn btn-sm btn-primary">
+                                            <a href="{{ url_for('trading.stock_detail', ticker=post.ticker) }}" class="btn btn-sm btn-primary">
                                                 <i class="fas fa-chart-line me-1"></i> View Stock
                                             </a>
                                         </div>
@@ -248,11 +254,6 @@
                     },
                     y: {
                         beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return value + '%';
-                            }
-                        }
                     }
                 }
             }
