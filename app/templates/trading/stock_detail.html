@@ -184,14 +184,13 @@
                             {{ trade_form.quantity(class="form-control", type="number", min="1", step="1") }}
                         </div>
                         
-                        <div class="form-group mb-3">
-                            <label class="form-label">Estimated Total</label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input type="text" class="form-control" id="estimated_total" readonly value="0.00">
-                            </div>
+                        <!-- AI Assistant Button -->
+                        <div class="d-grid mb-3">
+                            <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#aiTradeAssistModal">
+                                <i class="bi bi-robot me-2"></i>Need AI assist for this trade?
+                            </button>
                         </div>
-
+                        
                         <div class="form-check mb-3">
                             {{ trade_form.make_public(class="form-check-input") }}
                             <label class="form-check-label" for="make_public">
@@ -239,6 +238,58 @@
         </div>
     </div>
 </div>
+
+<!-- AI Trading Assistant Modal -->
+<div class="modal fade" id="aiTradeAssistModal" tabindex="-1" aria-labelledby="aiTradeAssistModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-info bg-opacity-10">
+                <h5 class="modal-title" id="aiTradeAssistModalLabel">
+                    <i class="bi bi-robot me-2"></i>AI Trading Assistant
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6 class="fw-bold mb-3">Trade Summary</h6>
+                
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Stock:</span>
+                            <span class="fw-bold">{{ stock.name }} ({{ stock.ticker }})</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Current Price:</span>
+                            <span class="fw-bold">${{ (stock.current_price|default(0))|round(2) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Action:</span>
+                            <span class="fw-bold trade-action">Buy</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Quantity:</span>
+                            <span class="fw-bold trade-quantity">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Estimated Total:</span>
+                            <span class="fw-bold trade-total">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <small>
+                        <i class="bi bi-info-circle me-2"></i>AI analysis will be integrated in a future update. This will include personalized recommendations based on your portfolio, market conditions, and trading history.
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -345,24 +396,6 @@
             }
             
             const quantityInput = tradeForm.querySelector('input[name="quantity"]');
-            const estimatedTotalInput = document.getElementById('estimated_total');
-            
-            function updateEstimatedTotal() {
-                if (quantityInput && estimatedTotalInput) {
-                    let quantity = 0;
-                    try {
-                        quantity = parseFloat(quantityInput.value) || 0;
-                        if (isNaN(quantity)) quantity = 0;
-                    } catch (e) {
-                        console.error("Error parsing quantity:", e);
-                        quantity = 0;
-                    }
-                    
-                    const total = (quantity * stockPrice).toFixed(2);
-                    estimatedTotalInput.value = total;
-                    console.log(`Calculating total: ${quantity} * ${stockPrice} = ${total}`);
-                }
-            }
             
             if (quantityInput) {
                 // Prevent non-numeric input
@@ -373,14 +406,10 @@
                     if ((this.value.match(/\./g) || []).length > 1) {
                         this.value = this.value.replace(/\.+$/, '');
                     }
-                    updateEstimatedTotal();
                 });
                 
-                // Add event listeners for radio buttons to recalculate total when action changes
+                // Add event listeners for radio buttons
                 const actionRadios = tradeForm.querySelectorAll('input[name="action"]');
-                actionRadios.forEach(radio => {
-                    radio.addEventListener('change', updateEstimatedTotal);
-                });
                 
                 // Validate form before submission
                 tradeForm.addEventListener('submit', function(e) {
@@ -398,14 +427,62 @@
                     
                     return true;
                 });
-                
-                // Initialize with default values
-                updateEstimatedTotal();
             } else {
                 console.error("Quantity input not found. Check the form field names.");
             }
         } else {
             console.error("Trade form element not found. Check the form ID.");
+        }
+        
+        // AI Trading Assistant Modal functionality
+        const aiAssistBtn = document.querySelector('[data-bs-target="#aiTradeAssistModal"]');
+        const tradeActionEl = document.querySelector('.trade-action');
+        const tradeQuantityEl = document.querySelector('.trade-quantity');
+        const tradeTotalEl = document.querySelector('.trade-total');
+        
+        if (aiAssistBtn && tradeActionEl && tradeQuantityEl && tradeTotalEl) {
+            aiAssistBtn.addEventListener('click', function() {
+                // Get current values from the form
+                const actionRadios = document.querySelectorAll('input[name="action"]');
+                let action = 'Buy'; // Default
+                
+                for (const radio of actionRadios) {
+                    if (radio.checked) {
+                        action = radio.value === 'buy' ? 'Buy' : 'Sell';
+                        break;
+                    }
+                }
+                
+                const quantityInput = document.querySelector('input[name="quantity"]');
+                let quantity = 0;
+                
+                if (quantityInput) {
+                    try {
+                        quantity = parseInt(quantityInput.value) || 0;
+                    } catch (e) {
+                        console.error('Error parsing quantity:', e);
+                    }
+                }
+                
+                // Calculate total
+                let stockPrice = 0;
+                try {
+                    stockPrice = parseFloat('{{ stock.current_price|default(0) }}') || 0;
+                } catch (e) {
+                    console.error('Error parsing stock price:', e);
+                }
+                
+                const total = (quantity * stockPrice).toFixed(2);
+                
+                // Update modal content
+                tradeActionEl.textContent = action;
+                tradeQuantityEl.textContent = quantity;
+                tradeTotalEl.textContent = '$' + total;
+                
+                // Add appropriate classes based on action
+                tradeActionEl.classList.remove('text-success', 'text-danger');
+                tradeActionEl.classList.add(action === 'Buy' ? 'text-success' : 'text-danger');
+            });
         }
     });
 </script>
