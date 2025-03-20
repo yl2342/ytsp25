@@ -81,12 +81,13 @@ def execute_buy(user, ticker, quantity, price, make_public=False, trading_note="
         db.session.add(transaction)
         
         # Create trading post if public
-        if make_public and trading_note:
+        if make_public:
             title = f"Bought {quantity} shares of {ticker}"
+            content = trading_note if trading_note else f"I bought {quantity} shares of {ticker} at ${price:.2f} per share."
             post = TradingPost(
                 user_id=user.id,
                 title=title,
-                content=trading_note,
+                content=content,
                 ticker=ticker,
                 trade_type="buy",
                 quantity=quantity,
@@ -162,12 +163,13 @@ def execute_sell(user, ticker, quantity, price, make_public=False, trading_note=
             db.session.delete(holding)
         
         # Create trading post if public
-        if make_public and trading_note:
+        if make_public:
             title = f"Sold {quantity} shares of {ticker}"
+            content = trading_note if trading_note else f"I sold {quantity} shares of {ticker} at ${price:.2f} per share."
             post = TradingPost(
                 user_id=user.id,
                 title=title,
-                content=trading_note,
+                content=content,
                 ticker=ticker,
                 trade_type="sell",
                 quantity=quantity,
@@ -300,4 +302,131 @@ def get_portfolio_summary(user):
             'holdings': [],
             'total_profit_loss': 0,
             'total_profit_loss_percent': 0
-        } 
+        }
+
+
+def ensure_public_transactions(user_id):
+    """
+    Ensures all transactions that should be public are correctly linked to public trading posts.
+    
+    This function finds any transactions that should be public but aren't correctly linked
+    to a trading post, and fixes the relationship.
+    
+    Args:
+        user_id: ID of the user whose transactions to check
+        
+    Returns:
+        int: Number of transactions fixed
+    """
+    try:
+        from app.models.social import TradingPost
+        from app.models.stock import Transaction
+        
+        # Get all transactions without a trading_post_id
+        unlinked_transactions = Transaction.query.filter_by(
+            user_id=user_id,
+            trading_post_id=None
+        ).all()
+        
+        if not unlinked_transactions:
+            return 0
+            
+        fixed_count = 0
+        
+        for transaction in unlinked_transactions:
+            # Check if a trading post exists for this transaction
+            # but isn't linked (can happen if the transaction was created first)
+            existing_post = TradingPost.query.filter_by(
+                user_id=user_id,
+                ticker=transaction.ticker,
+                trade_type=transaction.transaction_type,
+                quantity=transaction.quantity,
+                price=transaction.price
+            ).first()
+            
+            if existing_post and existing_post.is_public:
+                # Link the transaction to the existing post
+                transaction.trading_post_id = existing_post.id
+                fixed_count += 1
+                logger.info(f"Linked transaction {transaction.id} to existing trading post {existing_post.id}")
+            
+        if fixed_count > 0:
+            db.session.commit()
+            logger.info(f"Fixed {fixed_count} public transactions for user {user_id}")
+            
+        return fixed_count
+            
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error fixing public transactions for user {user_id}: {str(e)}")
+        return 0
+
+
+def create_missing_public_posts(user_id):
+    """
+    Creates public trading posts for any transaction without one, 
+    assuming the user wanted to share them publicly.
+    
+    Call this function with caution as it will make all transactions public.
+    Best used as an admin function or one-time fix.
+    
+    Args:
+        user_id: ID of the user whose transactions to check
+        
+    Returns:
+        int: Number of public posts created
+    """
+    try:
+        from app.models.social import TradingPost
+        from app.models.stock import Transaction
+        from app.models.user import User
+        
+        # Get user info for better post content
+        user = User.query.get(user_id)
+        if not user:
+            return 0
+            
+        # Get all transactions without a trading_post_id
+        unlinked_transactions = Transaction.query.filter_by(
+            user_id=user_id,
+            trading_post_id=None
+        ).all()
+        
+        if not unlinked_transactions:
+            return 0
+            
+        created_count = 0
+        
+        for transaction in unlinked_transactions:
+            # Create a new public trading post for this transaction
+            trade_type = transaction.transaction_type
+            title = f"{'Bought' if trade_type == 'buy' else 'Sold'} {transaction.quantity} shares of {transaction.ticker}"
+            content = f"I {'bought' if trade_type == 'buy' else 'sold'} {transaction.quantity} shares of {transaction.ticker} at ${transaction.price:.2f} per share."
+            
+            post = TradingPost(
+                user_id=user_id,
+                title=title,
+                content=content,
+                ticker=transaction.ticker,
+                trade_type=trade_type,
+                quantity=transaction.quantity,
+                price=transaction.price,
+                is_public=True
+            )
+            db.session.add(post)
+            db.session.flush()  # Get post ID
+            
+            # Link the transaction to the post
+            transaction.trading_post_id = post.id
+            created_count += 1
+            
+        if created_count > 0:
+            db.session.commit()
+            logger.info(f"Created {created_count} public posts for user {user_id}")
+            
+        return created_count
+            
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error creating public posts for user {user_id}: {str(e)}")
+        return 0 

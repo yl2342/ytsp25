@@ -25,7 +25,11 @@
                                                  alt="{{ current_user.first_name }}" class="rounded-circle" width="50" height="50">
                                         </div>
                                         <div class="ms-3">
-                                            <h3 class="h6 mb-0">{{ current_user.first_name }} {{ current_user.last_name }}</h3>
+                                            <h3 class="h6 mb-0">
+                                                <a href="{{ url_for('social.user_profile', user_id=current_user.id) }}" class="text-decoration-none">
+                                                    {{ current_user.first_name }} {{ current_user.last_name }}
+                                                </a>
+                                            </h3>
                                             <div class="text-muted small">
                                                 {{ post.created_at.strftime('%B %d, %Y at %I:%M %p') }}
                                             </div>

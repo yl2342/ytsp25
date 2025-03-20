@@ -7,6 +7,7 @@ from app.forms import UserSearchForm, PostCommentForm, ReplyForm
 from app.utils.stock_utils import get_trending_stocks, get_popular_stocks
 from app.models.stock import Transaction
 from app.models.stock import StockHolding
+from app.utils.trading_utils import ensure_public_transactions, create_missing_public_posts
 import logging
 
 logger = logging.getLogger(__name__)
@@ -41,6 +42,9 @@ def search_users():
 @login_required
 def user_profile(user_id):
     user = User.query.get_or_404(user_id)
+    
+    # Fix any public transactions that aren't properly linked
+    ensure_public_transactions(user_id)
     
     # Get public trading posts by this user
     posts = TradingPost.query.filter_by(
@@ -315,4 +319,21 @@ def toggle_post_visibility(post_id):
     status = "public" if is_public else "private"
     flash(f"Post is now {status}.", "success")
     
-    return redirect(url_for('social.view_post', post_id=post_id)) 
+    return redirect(url_for('social.view_post', post_id=post_id))
+
+
+@social_bp.route('/make_all_public')
+@login_required
+def make_all_transactions_public():
+    """A utility route to make all of the current user's transactions public"""
+    try:
+        count = create_missing_public_posts(current_user.id)
+        if count > 0:
+            flash(f"Successfully made {count} of your transactions public.", "success")
+        else:
+            flash("No transactions needed to be made public.", "info")
+    except Exception as e:
+        logger.error(f"Error making transactions public: {str(e)}")
+        flash("An error occurred while trying to make your transactions public.", "danger")
+        
+    return redirect(url_for('social.user_profile', user_id=current_user.id)) 

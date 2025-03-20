@@ -11,7 +11,7 @@ class StockHolding(db.Model):
     quantity = db.Column(db.Float, nullable=False, default=0)
     average_buy_price = db.Column(db.Float, nullable=False)
     current_price = db.Column(db.Float, nullable=False)
-    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_updated = db.Column(db.DateTime, default=datetime.now(zoneinfo.ZoneInfo("America/New_York")), onupdate=datetime.now(zoneinfo.ZoneInfo("America/New_York")))
 
     def __init__(self, user_id, ticker, company_name, quantity, buy_price):
         self.user_id = user_id
@@ -35,7 +35,7 @@ class StockHolding(db.Model):
             self.quantity += quantity_change  # quantity_change is negative for sells
         
         self.current_price = price
-        self.last_updated = datetime.utcnow()
+        self.last_updated = datetime.now(zoneinfo.ZoneInfo("America/New_York"))
         return True
 
     def get_market_value(self):
