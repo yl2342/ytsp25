@@ -80,51 +80,19 @@
                 </div>
                 <div class="card-body">
                     <div class="list-group">
-                        <a href="{{ url_for('trading.stock_detail', ticker='AAPL') }}" class="list-group-item list-group-item-action">
+                        {% for stock in popular_stocks %}
+                        <a href="{{ url_for('trading.stock_detail', ticker=stock.ticker) }}" class="list-group-item list-group-item-action">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <span class="fw-bold">AAPL</span>
-                                    <small class="text-muted d-block">Apple Inc.</small>
+                                    <span class="fw-bold">{{ stock.ticker }}</span>
+                                    <small class="text-muted d-block">{{ stock.name }}</small>
                                 </div>
-                                <i class="fas fa-chevron-right text-muted"></i>
+                                <div class="{% if stock.change_percent >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {% if stock.change_percent >= 0 %}+{% endif %}{{ stock.change_percent|round(1) }}%
+                                </div>
                             </div>
                         </a>
-                        <a href="{{ url_for('trading.stock_detail', ticker='MSFT') }}" class="list-group-item list-group-item-action">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <span class="fw-bold">MSFT</span>
-                                    <small class="text-muted d-block">Microsoft Corp.</small>
-                                </div>
-                                <i class="fas fa-chevron-right text-muted"></i>
-                            </div>
-                        </a>
-                        <a href="{{ url_for('trading.stock_detail', ticker='AMZN') }}" class="list-group-item list-group-item-action">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <span class="fw-bold">AMZN</span>
-                                    <small class="text-muted d-block">Amazon.com Inc.</small>
-                                </div>
-                                <i class="fas fa-chevron-right text-muted"></i>
-                            </div>
-                        </a>
-                        <a href="{{ url_for('trading.stock_detail', ticker='GOOGL') }}" class="list-group-item list-group-item-action">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <span class="fw-bold">GOOGL</span>
-                                    <small class="text-muted d-block">Alphabet Inc.</small>
-                                </div>
-                                <i class="fas fa-chevron-right text-muted"></i>
-                            </div>
-                        </a>
-                        <a href="{{ url_for('trading.stock_detail', ticker='META') }}" class="list-group-item list-group-item-action">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <span class="fw-bold">META</span>
-                                    <small class="text-muted d-block">Meta Platforms Inc.</small>
-                                </div>
-                                <i class="fas fa-chevron-right text-muted"></i>
-                            </div>
-                        </a>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
