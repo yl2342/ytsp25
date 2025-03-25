@@ -98,13 +98,21 @@ def get_stock_info(ticker):
             # For debugging purposes
             logger.info(f"Available info keys: {list(info.keys())}")
             
+            # Provide a fallback for missing name
+            if is_equity and not has_name and formatted_ticker:
+                logger.info(f"Adding fallback name for {formatted_ticker}")
+                info['longName'] = f"{formatted_ticker} Stock"
+                has_name = True
+            
             # Even if validation failed, try to handle common stocks anyway
-            if formatted_ticker in ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"] and 'regularMarketPrice' in info:
+            if formatted_ticker in ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "META", "JPM", "V", "BAC"] and 'regularMarketPrice' in info:
                 logger.info(f"Forcing data for common stock: {formatted_ticker}")
                 # Force the type for known common stocks
                 info['quoteType'] = 'EQUITY'
                 if 'longName' not in info and 'shortName' in info:
                     info['longName'] = info['shortName']
+                elif 'longName' not in info and 'shortName' not in info:
+                    info['longName'] = f"{formatted_ticker} Stock"
             else:
                 # Check if we have cached data as a fallback
                 if formatted_ticker in _stock_cache:
@@ -208,6 +216,7 @@ def get_stock_historical_data(ticker, period='1mo'):
         hist = stock.history(period=period)
         
         if hist.empty:
+            logger.warning(f"Empty historical data for {formatted_ticker} (period={period})")
             return []
             
         # Convert dataframe to list of dicts for easier handling in Flask
@@ -225,6 +234,13 @@ def get_stock_historical_data(ticker, period='1mo'):
         return data
     except Exception as e:
         logger.error(f"Error fetching historical data for {ticker}: {str(e)}")
+        # If there's an error, try an alternative period as a fallback
+        if period != '1mo':
+            try:
+                logger.info(f"Trying fallback period (1mo) for {ticker}")
+                return get_stock_historical_data(ticker, '1mo')
+            except Exception as fallback_e:
+                logger.error(f"Fallback also failed for {ticker}: {str(fallback_e)}")
         return []
 
 
