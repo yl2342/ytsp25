@@ -128,7 +128,7 @@ def seed_database():
             {'ticker': 'NVDA', 'company_name': 'NVIDIA Corporation', 'price': 902.50},
             {'ticker': 'META', 'company_name': 'Meta Platforms, Inc.', 'price': 475.80},
             {'ticker': 'TSLA', 'company_name': 'Tesla, Inc.', 'price': 168.19},
-            {'ticker': 'BRK.B', 'company_name': 'Berkshire Hathaway Inc.', 'price': 406.76},
+            {'ticker': 'BAC', 'company_name': 'Bank of America Corporation', 'price': 39.76},
             {'ticker': 'JPM', 'company_name': 'JPMorgan Chase & Co.', 'price': 198.73},
             {'ticker': 'V', 'company_name': 'Visa Inc.', 'price': 271.40},
             {'ticker': 'WMT', 'company_name': 'Walmart Inc.', 'price': 78.65},
