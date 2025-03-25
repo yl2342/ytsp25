@@ -2,10 +2,28 @@
 
 A Robinhood-like full-stack web application for Yale students to simulate stock investments, manage financial portfolios, and interact with a community of peers.
 
-![Yale Trading Platform](https://via.placeholder.com/800x400?text=Yale+Trading+Platform)
+--- 
+
+![Yale Trading Platform - by chatgpt](app/static/img/ytsp_dan.png)
+
+## Project Status
+
+**Current Version: MVP (Minimum Viable Product)**
+
+This is the initial version of the platform with core trading functionality. The application is fully functional with user authentication, trading capabilities, portfolio management, and social features.
+
+### Roadmap
+
+* **March 2024**: MVP Release with core trading, portfolio management, and social features ✅
+* **April 2024**: Alpha Version: Enhanced UI/UX and expanded community features
+* **May 2024**: Beta Version: Add AI-Assisted Trading Advice integration and enhanced analytics
+* **June 2024**: Final Version: Finalize UI/UX design, comprehensive testing, documentation, and deployment
+
+---
 
 ## Table of Contents
 - [Features](#features)
+- [Upcoming Features](#upcoming-features)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [Setup Instructions](#setup-instructions)
@@ -16,39 +34,63 @@ A Robinhood-like full-stack web application for Yale students to simulate stock 
 - [Contributing](#contributing)
 - [License](#license)
 
+---
+
 ## Features
 
 ### User Management
-- **Authentication**: Secure registration and login system with Yale NetID integration
+- **Authentication**: Secure registration and login system with Yale NetID
 - **Profile Management**: Customize your trading profile and privacy settings
 - **Fund Management**: Deposit and withdraw simulated funds with transaction history
-- **Account Settings**: Update personal information and security preferences
 
 ### Trading Features
-- **Stock Search**: Find companies by ticker symbol (e.g., AAPL, MSFT) or company name
-- **Real-time Data**: View current stock prices, trends, and historical performance
-- **Company Information**: Access detailed company profiles, financial statistics, and news
+- **Stock Search**: Find companies by ticker symbol (e.g., AAPL, MSFT)
+- **Real-time Data**: View current stock prices powered by Yahoo Finance API
+- **Company Information**: Access detailed company profiles, financial statistics
 - **Portfolio Management**:
-  - Buy and sell stocks with real-time pricing
+  - Buy and sell stocks with (nearly) real-time pricing
   - Track your holdings with performance metrics
   - View historical trades and portfolio growth
   - Analyze investment distribution and sector exposure
-
+  
 ### Social Features
 - **User Network**: Follow other Yale students to build your investment network
-- **Activity Feed**: View trading activities of people you follow
+- **Activity Feed**: View trading activities on the social feed platform or shared by the people you follow
 - **Trading Posts**: Share insights about your trades with custom messages
-- **Engagement**: Like, dislike, and comment on trading posts
+- **Engagement**: Comment on trading posts
 - **Privacy Control**: Set trading activities as public or private
-- **Leaderboards**: Compare performance with peers (coming soon)
+
+---
+
+## Upcoming Features
+
+### Expanded social features
+- **Likes/Dislikes**: Like/Dislike trading posts from other users
+- **Shares/Reposts**: Share trading posts from other users
+- **Replies**: Reply to trading posts from other users
+- **Leaderboards**: Compare performance with peers
+
+
+### AI-Assisted Trading Advice
+In future iterations, we will integrate large language models (LLMs) to provide AI-assisted trading insights:
+
+- **Smart Trade Analysis**: AI evaluation of potential trades based on market conditions, historical data, and your portfolio composition
+- **Risk Assessment**: Intelligent risk analysis for each transaction with personalized recommendations
+- **Market Insights**: AI-generated explanations of market trends and events in plain language
+- **Learning System**: Trading advice that improves over time based on your preferences and trading history
+- **Strategy Recommendations**: Personalized investment strategies aligned with your goals and risk tolerance
+
+This feature will leverage cutting-edge LLM reasoning models to provide contextual, personalized advice that helps users make more informed trading decisions while learning about investment principles.
+
+---
 
 ## Tech Stack
 
 ### Backend
 - **Framework**: Python Flask with Blueprints architecture
-- **Database**: SQLite (development) / PostgreSQL (production)
+- **Database**: SQLite (ytsp.db in the instance directory for development) / PostgreSQL (production in future iterations)
 - **ORM**: SQLAlchemy for database management
-- **Authentication**: Flask-Login with secure password handling
+- **Authentication**: Flask-Login with secure password handling via Flask-Bcrypt
 - **Forms**: WTForms with CSRF protection
 
 ### Frontend
@@ -61,6 +103,9 @@ A Robinhood-like full-stack web application for Yale students to simulate stock 
 - **Stock Data**: Integration with Yahoo Finance (yfinance)
 - **Historical Data**: Time-series financial information
 - **Company Information**: Company profiles and key statistics
+- **AI Services**: Integration with LLM providers' APIs for trading advice (planned for future releases)
+
+---
 
 ## Project Structure
 
@@ -68,6 +113,7 @@ A Robinhood-like full-stack web application for Yale students to simulate stock 
 ytsp/
 ├── app/                    # Main application package
 │   ├── api/                # API endpoints
+│   ├── controllers/        # Route handlers
 │   │   ├── auth.py         # Authentication routes
 │   │   ├── main.py         # Main site routes
 │   │   ├── social.py       # Social feature routes
@@ -84,12 +130,15 @@ ytsp/
 ├── venv/                   # Virtual environment
 ├── .env                    # Environment variables
 ├── .env.example            # Example environment file
-├── app.db                  # SQLite database
+├── instance/               # Instance directory
+│   └── ytsp.db             # SQLite database
 ├── requirements.txt        # Python dependencies
-├── reset_db.py             # Database reset utility
+├── reset_seed_db.py        # Database reset and seeding utility
 ├── run.py                  # Application entry point
 └── README.md               # This file
 ```
+
+---
 
 ## Setup Instructions
 
@@ -132,7 +181,8 @@ flask db upgrade
 
 6. **Populate with sample data (optional)**
 ```bash
-python reset_db.py
+# After database migrations have been applied
+python reset_seed_db.py
 ```
 
 7. **Run the application**
@@ -144,19 +194,20 @@ python run.py
 
 8. **Access the application at http://localhost:5000**
 
+---
+
 ## User Guide
 
 ### Registration and Login
 1. Navigate to the homepage
 2. Click "Register" and complete the form with your Yale credentials
-3. Verify your email if required
-4. Log in with your credentials
+3. Log in with your credentials
 
 ### Managing Your Portfolio
 1. After logging in, you'll be directed to your dashboard
 2. To add funds: Go to "Account" → "Deposit Funds"
 3. To buy stocks:
-   - Use the search bar to find a stock by ticker or name
+   - Use the search bar to find a stock by ticker symbol
    - Click on the stock to view details
    - Enter the quantity and click "Buy"
 4. To sell stocks:
@@ -176,18 +227,11 @@ python run.py
    - Choose to make it public and add a comment
 3. To engage with posts:
    - Browse the "Social Feed" to see posts from users you follow
-   - Like, dislike, or comment on posts
-4. To manage privacy:
-   - Go to "Settings" → "Privacy"
-   - Configure which activities are visible to followers
+   - Comment on posts
+
+---
 
 ## Development Guidelines
-
-### Coding Standards
-- Follow PEP 8 for Python code
-- Use meaningful variable and function names
-- Document functions and classes with docstrings
-- Maintain separation of concerns between models, views, and controllers
 
 ### Database Migrations
 When changing models:
@@ -203,20 +247,18 @@ flask db upgrade
 4. Add static assets in `app/static/`
 5. Run tests to ensure functionality
 
+---
+
 ## Testing
 
-### Running Tests
+The MVP release has basic functionality testing implemented. Enhanced testing coverage will be added in alpha and beta releases.
+
+To run tests:
 ```bash
 pytest
-# For specific tests
-pytest tests/test_trading.py
-# With coverage
-pytest --cov=app tests/
 ```
 
-### Testing Accounts
-- **Admin User**: admin@yale.edu / password123
-- **Test User**: test@yale.edu / password123
+---
 
 ## Troubleshooting
 
@@ -232,13 +274,14 @@ If stock data isn't loading:
 #### Database Errors
 If you encounter database issues:
 1. Ensure migrations are up to date: `flask db upgrade`
-2. If database is corrupted, reset it: `python reset_db.py`
+2. If database is corrupted, reset it: `python reset_seed_db.py` (This will recreate ytsp.db in the instance directory)
 
 #### Authentication Problems
 If you can't log in:
 1. Verify your credentials
-2. Reset your password through the login page
-3. Check if your account is locked (after multiple failed attempts)
+2. We do not have a password reset functionality yet. If you forgot your password, please contact the developers or sign up for a new account.
+
+---
 
 ## Contributing
 
@@ -247,11 +290,13 @@ If you can't log in:
 3. Commit your changes: `git commit -m 'Add feature'`
 4. Push to the branch: `git push origin feature-name`
 5. Submit a pull request
+   
+---
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License 
 
 ---
 
-© 2023 Yale University CPSC 519 Project Team 
+© 2024 Yale University CPSC 519 Project Team No. 24
