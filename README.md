@@ -14,10 +14,10 @@ This is the initial version of the platform with core trading functionality. The
 
 ### Roadmap
 
-* **March 2024**: MVP Release with core trading, portfolio management, and social features ✅
-* **April 2024**: Alpha Version: Enhanced UI/UX and expanded community features
-* **May 2024**: Beta Version: Add AI-Assisted Trading Advice integration and enhanced analytics
-* **June 2024**: Final Version: Finalize UI/UX design, comprehensive testing, documentation, and deployment
+* **March 28 2024**: MVP Release with core trading, portfolio management, and social features ✅
+* **April 9**: Alpha Version: Enhanced UI/UX and expanded community features
+* **April 18 2024**: Beta Version: Add AI-Assisted Trading Advice integration and enhanced analytics
+* **May 3 2024**: Final Version: Finalize UI/UX design, comprehensive testing, documentation, and deployment
 
 ---
 
