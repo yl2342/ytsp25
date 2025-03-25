@@ -209,7 +209,7 @@ python run.py
 3. To buy stocks:
    - Use the search bar to find a stock by ticker symbol
    - Click on the stock to view details
-   - Enter the quantity and click "Buy"
+   - Enter the quantity and click "Buy" (You can only buy whole shares)
 4. To sell stocks:
    - Go to "Portfolio" → "Holdings"
    - Find the stock you want to sell
@@ -252,11 +252,6 @@ flask db upgrade
 ## Testing
 
 The MVP release has basic functionality testing implemented. Enhanced testing coverage will be added in alpha and beta releases.
-
-To run tests:
-```bash
-pytest
-```
 
 ---
 
