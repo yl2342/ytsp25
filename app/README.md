@@ -1,134 +1,116 @@
 # Yale Trading Simulation Platform - Application Structure
 
-This directory contains the core application code for the Yale Trading Simulation Platform.
+This directory contains the core application code for the Yale Trading Simulation Platform (YTSP). This document provides an overview of the application architecture, component responsibilities, and design patterns.
+
+## Project Status
+
+**Current Version: MVP (Minimum Viable Product)**
+
+This is the initial version of the platform with core trading functionality. The application is fully functional with user authentication, trading capabilities, portfolio management, and social features.
+
+### Upcoming Features
+
+* **Enhanced UI/UX**: Improved design and user experience
+* **Advanced Portfolio Analytics**: More detailed performance metrics and visualizations
+* **Enhanced Social Features**: Expanded community functionality including likes/dislikes and sharing
+* **AI-Assisted Trading Advice**: Integration with LLM reasoning models to provide personalized trading insights and recommendations
+
+## Architecture Overview
+
+The application follows a Model-View-Controller (MVC) pattern with Flask Blueprints for modular organization:
+
+- **Models**: Database schema definitions using SQLAlchemy ORM
+- **Views**: Jinja2 templates (in `templates/`)
+- **Controllers**: Route handlers organized into blueprints
 
 ## Directory Structure
 
-### `__init__.py`
-- Application factory pattern
-- Flask application configuration
-- Blueprint registration
-- Extension initialization
+```
+app/
+├── __init__.py          # Application factory and configuration
+├── forms.py             # WTForms form definitions
+├── api/                 # API endpoints for data retrieval
+├── controllers/         # Route handlers organized by feature
+├── models/              # Database models
+├── static/              # Static assets (CSS, JS, images)
+├── templates/           # Jinja2 HTML templates
+└── utils/               # Helper functions and utilities
+```
 
-### `/api/`
-API endpoints for external services integration.
+## Components
 
-- Stock data retrieval
-- Market information
-- External integrations
+### Models (`app/models/`)
 
-### `/controllers/`
-Route handlers organized by feature.
+Database models using SQLAlchemy:
 
-- **`auth.py`**: Authentication routes (login, logout, registration)
-- **`main.py`**: Core application routes (home, about, etc.)
-- **`social.py`**: Social feature routes (following, feed, posts)
-- **`trading.py`**: Trading functionality routes (buy, sell, portfolio)
+- **User** (`user.py`): User accounts, authentication, and relationships
+- **Stock** (`stock.py`): Stock holdings, transactions, and cash movements
+- **Social** (`social.py`): Trading posts, comments, and social interactions
 
-### `/models/`
-Database models using SQLAlchemy ORM.
+### Controllers (`app/controllers/`)
 
-- **`user.py`**: User account and profile models
-- **`stock.py`**: Stock data and portfolio models
-- **`social.py`**: Social interaction models (follows, posts)
+Route handlers divided by feature area:
 
-### `/static/`
-Static assets for the application.
+- **Auth** (`auth.py`): User registration, login, profile management
+- **Main** (`main.py`): Home page, dashboard, and general navigation
+- **Trading** (`trading.py`): Stock search, buy/sell operations, portfolio management
+- **Social** (`social.py`): Social feed, posts, comments, and user following
 
-- **`/css/`**: Stylesheets
-- **`/js/`**: JavaScript files
-- **`/img/`**: Images and icons
-- **`/vendor/`**: Third-party libraries
+### API (`app/api/`)
 
-### `/templates/`
-Jinja2 templates organized by feature.
+External data access endpoints for stock data retrieval
 
-- **`/auth/`**: Authentication templates
-- **`/main/`**: Core page templates
-- **`/social/`**: Social feature templates
-- **`/trading/`**: Trading functionality templates
-- **`layout.html`**: Base template with common structure
+### Templates (`app/templates/`)
 
-### `/utils/`
-Utility functions and helpers.
+Jinja2 templates are organized by controller/feature to maintain separation of concerns.
 
-- Date/time formatting
-- Financial calculations
-- Security utilities
-- General helper functions
+### Utils (`app/utils/`)
 
-### `forms.py`
-Form definitions using WTForms.
+Helper functions and services:
 
-- Login/registration forms
-- Trading forms
-- User profile forms
-- Search forms
+- **stock_utils.py**: Functions for fetching and processing stock data
+- **trading_utils.py**: Utilities for executing trades and managing portfolios
 
-## Application Flow
+## Planned AI Integration
 
-1. Request enters through a controller route
-2. Controller validates input (forms)
-3. Controller interacts with models to retrieve/modify data
-4. Controller renders a template with the data
-5. Response returned to user
+In future iterations, we will integrate large language models (LLMs) to provide AI-assisted trading advice:
 
-## Development Guidelines
+### LLM Reasoning Models
 
-### Adding a New Feature
+- **Trade Analysis**: AI evaluation of potential trades based on market conditions, historical data, and user portfolio
+- **Risk Assessment**: Intelligent risk analysis for each transaction
+- **Market Insights**: AI-generated explanations of market trends and events
+- **Learning System**: Personalized advice that improves based on user preferences and trading history
 
-1. **Models**: Add necessary database models
-2. **Forms**: Create form classes for user input
-3. **Controllers**: Add route handlers
-4. **Templates**: Create templates for the feature
-5. **Static Assets**: Add any required CSS/JS
-6. **Testing**: Write tests for the new functionality
+### Implementation Plan
 
-### Code Style
+1. Create a new `ai_utils.py` module for AI-related functionality
+2. Add API endpoints for requesting trading advice
+3. Develop UI components to display AI insights within the trading workflow
+4. Implement feedback mechanisms to improve advice quality
 
-- Follow PEP 8 for Python code
-- Use consistent naming conventions
-- Comment complex sections of code
-- Write docstrings for functions and classes
+### Technical Approach
 
-### Security Best Practices
+- Integration with LLM providers' APIs
+- Context-aware prompting with user portfolio data and market conditions
+- Hybrid system combining traditional analysis with AI reasoning
+- Feedback loop for continuous improvement
 
-- Use CSRF protection for all forms
-- Validate all user input
-- Escape output to prevent XSS
-- Use secure password handling
-- Implement proper access controls
+## Authentication Flow
 
-## Extending the Application
+1. User registers with email and password
+2. Password is hashed and stored using Bcrypt via Flask-Bcrypt
+3. Flask-Login manages user sessions and authorization
+4. Protected routes enforce login_required decorator
 
-### Adding a New Model
+## Data Flow
 
-1. Create a new file in `models/` or extend an existing one
-2. Define your SQLAlchemy model class
-3. Add relationships to other models as needed
-4. Run migrations to update the database schema
+1. User initiates actions through controller routes
+2. Controllers validate input using WTForms
+3. Business logic is executed (often with help from utils)
+4. Database is updated via SQLAlchemy models
+5. Responses are returned (templates or JSON)
 
-### Adding a New Controller
-
-1. Create a new file in `controllers/` or extend an existing one
-2. Define a Blueprint for the feature
-3. Add route handlers
-4. Register the Blueprint in `__init__.py`
-
-### Adding a New Template
-
-1. Create a new file in `templates/` in the appropriate subdirectory
-2. Extend from the base layout template
-3. Define blocks for content and scripts
-4. Include any required forms or components
-
-## Troubleshooting
-
-- Check the Flask error logs
-- Verify database connection
-- Ensure all dependencies are installed
-- Check for syntax errors in templates
-- Verify route definitions and URL mappings
 
 ---
 

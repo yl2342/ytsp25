@@ -1,3 +1,7 @@
+"""
+Initialize the Flask application and configure all necessary extensions.
+This is the main entry point for the Yale Trading Simulation Platform.
+"""
 import os
 import datetime
 from flask import Flask
@@ -7,37 +11,47 @@ from flask_login import LoginManager
 from flask_bcrypt import Bcrypt
 from dotenv import load_dotenv
 
-# Load environment variables
+# Load environment variables from .env file
 load_dotenv()
 
-# Initialize extensions
+# Initialize Flask extensions
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
 bcrypt = Bcrypt()
 
 def create_app(config_class=None):
+    """
+    Application factory function that creates and configures the Flask app.
+    
+    Args:
+        config_class: Optional configuration class to use instead of environment variables
+        
+    Returns:
+        A configured Flask application instance
+    """
     app = Flask(__name__)
     
-    # Config from environment variables
+    # Configure app from environment variables
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-key-for-testing')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///ytsp.db') # if enironment variable is not set, default to local sqlite db
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False # turn off to improve performance
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///ytsp.db')
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Disable to improve performance
     
-    # Initialize extensions with app
-    db.init_app(app) # connect database instance to flask app
-    migrate.init_app(app, db) 
+    # Initialize extensions with the app
+    db.init_app(app)
+    migrate.init_app(app, db)
     login_manager.init_app(app)
     bcrypt.init_app(app)
     
-    # Configure login
+    # Configure login settings
     login_manager.login_view = 'auth.login'
     login_manager.login_message_category = 'info'
     
     # Add context processor to provide 'now' to all templates
     @app.context_processor
     def inject_now():
-        return {'now': datetime.datetime.now()}
+        """Inject current datetime into all templates"""
+        return {'now': datetime.datetime.now(datetime.timezone.utc)}
     
     # Import and register blueprints
     from app.controllers.auth import auth_bp

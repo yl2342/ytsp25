@@ -1,16 +1,30 @@
+"""
+API endpoints for stock data in the Yale Trading Simulation Platform.
+Provides routes for retrieving stock information, historical data, and search functionality.
+"""
 from flask import Blueprint, jsonify, request
 from flask_login import login_required
 from app.utils.stock_utils import get_stock_info, get_stock_historical_data, search_stocks, get_market_summary
 import logging
 
+# Set up logging
 logger = logging.getLogger(__name__)
 
+# Create blueprint for stock API endpoints
 stock_api_bp = Blueprint('stock_api', __name__)
 
 @stock_api_bp.route('/stock/info/<ticker>', methods=['GET'])
 @login_required
 def api_stock_info(ticker):
-    """Get basic information about a stock"""
+    """
+    Get basic information about a stock.
+    
+    Args:
+        ticker: Stock ticker symbol
+        
+    Returns:
+        JSON response with stock information or error message
+    """
     ticker = ticker.upper()
     stock_info = get_stock_info(ticker)
     
@@ -29,7 +43,18 @@ def api_stock_info(ticker):
 @stock_api_bp.route('/stock/history/<ticker>', methods=['GET'])
 @login_required
 def api_stock_history(ticker):
-    """Get historical price data for a stock"""
+    """
+    Get historical price data for a stock.
+    
+    Args:
+        ticker: Stock ticker symbol
+    
+    Query Params:
+        period: Time period for historical data (default: '1mo')
+        
+    Returns:
+        JSON response with historical price data or error message
+    """
     ticker = ticker.upper()
     period = request.args.get('period', '1mo')
     
@@ -60,7 +85,15 @@ def api_stock_history(ticker):
 @stock_api_bp.route('/stock/search', methods=['GET'])
 @login_required
 def api_stock_search():
-    """Search for stocks by name or ticker"""
+    """
+    Search for stocks by name or ticker.
+    
+    Query Params:
+        q: Search query string
+        
+    Returns:
+        JSON response with search results or error message
+    """
     query = request.args.get('q', '')
     
     if not query:
@@ -82,7 +115,12 @@ def api_stock_search():
 @stock_api_bp.route('/market/summary', methods=['GET'])
 @login_required
 def api_market_summary():
-    """Get summary of major market indices"""
+    """
+    Get summary of major market indices.
+    
+    Returns:
+        JSON response with market summary data or error message
+    """
     try:
         market_data = get_market_summary()
         
