@@ -29,6 +29,9 @@ venv/
 env/
 ENV/
 
+# database
+*.db
+
 # IDE specific files
 .idea/
 .vscode/
