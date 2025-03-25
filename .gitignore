@@ -32,6 +32,9 @@ ENV/
 # database
 *.db
 
+# migrations
+migrations/
+
 # IDE specific files
 .idea/
 .vscode/
