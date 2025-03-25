@@ -151,8 +151,8 @@ ytsp/
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yale-cpsc519/trading-platform.git
-cd trading-platform
+git clone https://github.com/yale-cpsc-419-25sp/project-project-group-24
+cd project-project-group-24
 ```
 
 2. **Set up a virtual environment**
