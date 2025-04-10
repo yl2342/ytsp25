@@ -2,34 +2,34 @@
 
 {% block content %}
 <div class="container">
-    <h1 class="mb-4">Welcome, {{ current_user.first_name }}!</h1>
+    <h3 class="mb-3">Welcome, {{ current_user.first_name }}!</h3>
     
     <!-- Account Summary Section -->
-    <div class="row mb-4">
+    <div class="row mb-3">
         <div class="col-md-12">
             <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="mb-0">Account Summary</h3>
+                <div class="card-header bg-primary text-white py-2">
+                    <h5 class="mb-0">Account Summary</h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body py-2">
                     <div class="row">
-                        <div class="col-md-4 text-center mb-3">
-                            <h5>Cash Balance</h5>
-                            <h3>${{ "%.2f"|format(portfolio.cash_balance) }}</h3>
-                            <div class="mt-2">
+                        <div class="col-md-4 text-center mb-2">
+                            <h6 class="mb-1">Cash Balance</h6>
+                            <h4 class="mb-1">${{ "%.2f"|format(portfolio.cash_balance) }}</h4>
+                            <div>
                                 <a href="{{ url_for('auth.deposit_funds') }}" class="btn btn-sm btn-outline-primary me-1">Deposit</a>
                                 <a href="{{ url_for('auth.withdraw_funds') }}" class="btn btn-sm btn-outline-secondary">Withdraw</a>
                             </div>
                         </div>
-                        <div class="col-md-4 text-center mb-3">
-                            <h5>Portfolio Value</h5>
-                            <h3>${{ "%.2f"|format(portfolio.portfolio_value) }}</h3>
-                            <a href="{{ url_for('trading.portfolio') }}" class="btn btn-sm btn-outline-primary mt-2">View Details</a>
+                        <div class="col-md-4 text-center mb-2">
+                            <h6 class="mb-1">Portfolio Value</h6>
+                            <h4 class="mb-1">${{ "%.2f"|format(portfolio.portfolio_value) }}</h4>
+                            <a href="{{ url_for('trading.portfolio') }}" class="btn btn-sm btn-outline-primary">View Details</a>
                         </div>
-                        <div class="col-md-4 text-center mb-3">
-                            <h5>Total Account Value</h5>
-                            <h3>${{ "%.2f"|format(portfolio.total_account_value) }}</h3>
-                            <div class="mt-2">
+                        <div class="col-md-4 text-center mb-2">
+                            <h6 class="mb-1">Total Account Value</h6>
+                            <h4 class="mb-1">${{ "%.2f"|format(portfolio.total_account_value) }}</h4>
+                            <div>
                                 {% if portfolio.total_profit_loss >= 0 %}
                                 <span class="badge bg-success">+${{ "%.2f"|format(portfolio.total_profit_loss) }} ({{ "%.2f"|format(portfolio.total_profit_loss_percent) }}%)</span>
                                 {% else %}
@@ -44,20 +44,20 @@
     </div>
     
     <!-- Market Overview Section -->
-    <div class="row mb-4">
+    <div class="row mb-3">
         <div class="col-md-12">
             <div class="card shadow-sm">
-                <div class="card-header bg-light">
-                    <h3 class="mb-0">Market Overview</h3>
+                <div class="card-header bg-light py-2">
+                    <h5 class="mb-0">Market Overview</h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body py-2">
                     <div class="row">
                         {% if market_indices %}
                             {% for index in market_indices %}
-                                <div class="col-md-3 col-sm-6 mb-3">
+                                <div class="col-md-3 col-sm-6 mb-2">
                                     <div class="d-flex flex-column align-items-center">
-                                        <h5>{{ index.name }}</h5>
-                                        <h3>{{ "%.2f"|format(index.price) }}</h3>
+                                        <h6 class="mb-0">{{ index.name }}</h6>
+                                        <h5 class="mb-0">{{ "%.2f"|format(index.price) }}</h5>
                                         <span class="{% if index.change > 0 %}text-success{% else %}text-danger{% endif %}">
                                             {% if index.change > 0 %}
                                                 <i class="fas fa-caret-up"></i>
@@ -71,13 +71,13 @@
                             {% endfor %}
                         {% else %}
                             <div class="col-12 text-center">
-                                <p>Market data unavailable at the moment.</p>
+                                <p class="mb-0">Market data unavailable at the moment.</p>
                             </div>
                         {% endif %}
                     </div>
                 </div>
-                <div class="card-footer text-center">
-                    <a href="{{ url_for('trading.stock_search') }}" class="btn btn-primary">
+                <div class="card-footer text-center py-2">
+                    <a href="{{ url_for('trading.stock_search') }}" class="btn btn-sm btn-primary">
                         <i class="fas fa-search-dollar me-1"></i>Search for Stocks
                     </a>
                 </div>
@@ -88,15 +88,15 @@
     <!-- Portfolio & Activity Section -->
     <div class="row">
         <!-- Portfolio Snapshot -->
-        <div class="col-lg-6 mb-4">
+        <div class="col-lg-6 mb-3">
             <div class="card shadow-sm h-100">
-                <div class="card-header bg-light">
-                    <h3 class="mb-0">Portfolio Snapshot</h3>
+                <div class="card-header bg-light py-2">
+                    <h5 class="mb-0">Portfolio Snapshot</h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-2">
                     {% if portfolio.stocks %}
                         <div class="table-responsive">
-                            <table class="table table-hover">
+                            <table class="table table-sm table-hover mb-0">
                                 <thead>
                                     <tr>
                                         <th>Symbol</th>
@@ -122,17 +122,17 @@
                             </table>
                         </div>
                         {% if portfolio.stocks|length > 5 %}
-                            <div class="text-center mt-3">
+                            <div class="text-center mt-2">
                                 <a href="{{ url_for('trading.portfolio') }}" class="btn btn-sm btn-outline-primary">
                                     View All Holdings
                                 </a>
                             </div>
                         {% endif %}
                     {% else %}
-                        <div class="text-center py-4">
-                            <i class="fas fa-chart-pie fa-3x text-muted mb-3"></i>
-                            <p>You don't have any stocks in your portfolio yet.</p>
-                            <a href="{{ url_for('trading.stock_search') }}" class="btn btn-primary">Start Trading</a>
+                        <div class="text-center py-3">
+                            <i class="fas fa-chart-pie fa-2x text-muted mb-2"></i>
+                            <p class="mb-2">You don't have any stocks in your portfolio yet.</p>
+                            <a href="{{ url_for('trading.stock_search') }}" class="btn btn-sm btn-primary">Start Trading</a>
                         </div>
                     {% endif %}
                 </div>
@@ -140,15 +140,15 @@
         </div>
         
         <!-- Recent Transactions -->
-        <div class="col-lg-6 mb-4">
+        <div class="col-lg-6 mb-3">
             <div class="card shadow-sm h-100">
-                <div class="card-header bg-light">
-                    <h3 class="mb-0">Recent Transactions</h3>
+                <div class="card-header bg-light py-2">
+                    <h5 class="mb-0">Recent Transactions</h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-2">
                     {% if recent_transactions %}
                         <div class="table-responsive">
-                            <table class="table table-hover">
+                            <table class="table table-sm table-hover mb-0">
                                 <thead>
                                     <tr>
                                         <th>Date</th>
@@ -195,10 +195,10 @@
                             </table>
                         </div>
                     {% else %}
-                        <div class="text-center py-4">
-                            <i class="fas fa-exchange-alt fa-3x text-muted mb-3"></i>
-                            <p>No transactions yet.</p>
-                            <a href="{{ url_for('trading.stock_search') }}" class="btn btn-primary">Start Trading</a>
+                        <div class="text-center py-3">
+                            <i class="fas fa-exchange-alt fa-2x text-muted mb-2"></i>
+                            <p class="mb-2">No transactions yet.</p>
+                            <a href="{{ url_for('trading.stock_search') }}" class="btn btn-sm btn-primary">Start Trading</a>
                         </div>
                     {% endif %}
                 </div>
@@ -210,39 +210,39 @@
     <div class="row">
         <div class="col-md-12">
             <div class="card shadow-sm">
-                <div class="card-header bg-light">
-                    <h3 class="mb-0">Social Activity</h3>
+                <div class="card-header bg-light py-2">
+                    <h5 class="mb-0">Social Activity</h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-2">
                     <ul class="nav nav-tabs" id="socialTabs" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="following-tab" data-bs-toggle="tab" data-bs-target="#following" type="button" role="tab" aria-controls="following" aria-selected="true">Following</button>
+                            <button class="nav-link active py-1 px-3" id="following-tab" data-bs-toggle="tab" data-bs-target="#following" type="button" role="tab" aria-controls="following" aria-selected="true">Following</button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="global-tab" data-bs-toggle="tab" data-bs-target="#global" type="button" role="tab" aria-controls="global" aria-selected="false">Global</button>
+                            <button class="nav-link py-1 px-3" id="global-tab" data-bs-toggle="tab" data-bs-target="#global" type="button" role="tab" aria-controls="global" aria-selected="false">Global</button>
                         </li>
                     </ul>
-                    <div class="tab-content p-3" id="socialTabsContent">
+                    <div class="tab-content p-2" id="socialTabsContent">
                         <!-- Following Tab -->
                         <div class="tab-pane fade show active" id="following" role="tabpanel" aria-labelledby="following-tab">
                             {% if followed_posts %}
                                 {% for post in followed_posts %}
-                                    <div class="card mb-3">
-                                        <div class="card-body">
+                                    <div class="card mb-2">
+                                        <div class="card-body p-2">
                                             <div class="d-flex">
                                                 <div class="flex-shrink-0">
                                                     <img src="{{ url_for('static', filename=post.author.get_avatar_url()) }}" 
-                                                         alt="{{ post.author.first_name }}" class="rounded-circle" width="40" height="40">
+                                                         alt="{{ post.author.first_name }}" class="rounded-circle" width="32" height="32">
                                                 </div>
-                                                <div class="flex-grow-1 ms-3">
-                                                    <h5 class="card-title">
+                                                <div class="flex-grow-1 ms-2">
+                                                    <h6 class="card-title mb-0">
                                                         <a href="{{ url_for('social.user_profile', user_id=post.user_id) }}">{{ post.author.first_name }} {{ post.author.last_name }}</a>
-                                                    </h5>
-                                                    <h6 class="card-subtitle mb-2 text-muted">{{ post.title }}</h6>
-                                                    <p class="card-text">{{ post.content }}</p>
+                                                    </h6>
+                                                    <p class="card-subtitle mb-1 text-muted small">{{ post.title }}</p>
+                                                    <p class="card-text small mb-1">{{ post.content }}</p>
                                                     <div class="d-flex justify-content-between align-items-center">
                                                         <small class="text-muted">{{ post.created_at.strftime('%m/%d/%Y %H:%M') }}</small>
-                                                        <a href="{{ url_for('social.view_post', post_id=post.id) }}" class="btn btn-sm btn-outline-primary">View Details</a>
+                                                        <a href="{{ url_for('social.view_post', post_id=post.id) }}" class="btn btn-sm btn-outline-primary btn-sm py-0 px-2">View</a>
                                                     </div>
                                                 </div>
                                             </div>
@@ -250,10 +250,10 @@
                                     </div>
                                 {% endfor %}
                             {% else %}
-                                <div class="text-center py-4">
-                                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
-                                    <p>No activity from people you follow yet.</p>
-                                    <a href="{{ url_for('social.search_users') }}" class="btn btn-primary">Find People to Follow</a>
+                                <div class="text-center py-2">
+                                    <i class="fas fa-users fa-2x text-muted mb-2"></i>
+                                    <p class="mb-2">No activity from people you follow yet.</p>
+                                    <a href="{{ url_for('social.search_users') }}" class="btn btn-sm btn-primary">Find People to Follow</a>
                                 </div>
                             {% endif %}
                         </div>
@@ -262,22 +262,22 @@
                         <div class="tab-pane fade" id="global" role="tabpanel" aria-labelledby="global-tab">
                             {% if global_posts %}
                                 {% for post in global_posts %}
-                                    <div class="card mb-3">
-                                        <div class="card-body">
+                                    <div class="card mb-2">
+                                        <div class="card-body p-2">
                                             <div class="d-flex">
                                                 <div class="flex-shrink-0">
                                                     <img src="{{ url_for('static', filename=post.author.get_avatar_url()) }}" 
-                                                         alt="{{ post.author.first_name }}" class="rounded-circle" width="40" height="40">
+                                                         alt="{{ post.author.first_name }}" class="rounded-circle" width="32" height="32">
                                                 </div>
-                                                <div class="flex-grow-1 ms-3">
-                                                    <h5 class="card-title">
+                                                <div class="flex-grow-1 ms-2">
+                                                    <h6 class="card-title mb-0">
                                                         <a href="{{ url_for('social.user_profile', user_id=post.user_id) }}">{{ post.author.first_name }} {{ post.author.last_name }}</a>
-                                                    </h5>
-                                                    <h6 class="card-subtitle mb-2 text-muted">{{ post.title }}</h6>
-                                                    <p class="card-text">{{ post.content }}</p>
+                                                    </h6>
+                                                    <p class="card-subtitle mb-1 text-muted small">{{ post.title }}</p>
+                                                    <p class="card-text small mb-1">{{ post.content }}</p>
                                                     <div class="d-flex justify-content-between align-items-center">
                                                         <small class="text-muted">{{ post.created_at.strftime('%m/%d/%Y %H:%M') }}</small>
-                                                        <a href="{{ url_for('social.view_post', post_id=post.id) }}" class="btn btn-sm btn-outline-primary">View Details</a>
+                                                        <a href="{{ url_for('social.view_post', post_id=post.id) }}" class="btn btn-sm btn-outline-primary btn-sm py-0 px-2">View</a>
                                                     </div>
                                                 </div>
                                             </div>
@@ -285,16 +285,16 @@
                                     </div>
                                 {% endfor %}
                             {% else %}
-                                <div class="text-center py-4">
-                                    <i class="fas fa-globe fa-3x text-muted mb-3"></i>
-                                    <p>No global activity available at the moment.</p>
+                                <div class="text-center py-2">
+                                    <i class="fas fa-globe fa-2x text-muted mb-2"></i>
+                                    <p class="mb-2">No global activity available at the moment.</p>
                                 </div>
                             {% endif %}
                         </div>
                     </div>
                 </div>
-                <div class="card-footer text-center">
-                    <a href="{{ url_for('social.feed') }}" class="btn btn-primary">View Full Social Feed</a>
+                <div class="card-footer text-center py-2">
+                    <a href="{{ url_for('social.feed') }}" class="btn btn-sm btn-primary">View Full Social Feed</a>
                 </div>
             </div>
         </div>
