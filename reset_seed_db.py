@@ -62,6 +62,7 @@ def seed_database():
             last_name='User'
         )
         admin.balance = 100000.00  # $100,000 starting balance
+        admin.avatar_id = random.randint(1, 10)  # Randomly assign avatar from available options
         
         # Create seed users with "SEED" as last name
         seed_users = []
@@ -89,6 +90,9 @@ def seed_database():
             
             # Set a random balance between $40,000 and $120,000
             seed_user.balance = random.uniform(40000.00, 120000.00)
+            
+            # Assign a random avatar ID (1-10) to each seed user
+            seed_user.avatar_id = random.randint(1, 10)
             
             seed_users.append(seed_user)
         

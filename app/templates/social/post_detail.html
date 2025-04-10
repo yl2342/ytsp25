@@ -12,7 +12,7 @@
                     <!-- Post Header -->
                     <div class="d-flex mb-3">
                         <div class="flex-shrink-0">
-                            <img src="{{ url_for('static', filename='img/avatars/default.png') }}" 
+                            <img src="{{ url_for('static', filename=post.author.get_avatar_url()) }}" 
                                  alt="{{ post.author.first_name }}" class="rounded-circle" width="60" height="60">
                         </div>
                         <div class="ms-3">
@@ -123,7 +123,7 @@
                                     <!-- Comment Header -->
                                     <div class="d-flex">
                                         <div class="flex-shrink-0">
-                                            <img src="{{ url_for('static', filename='img/avatars/default.png') }}" 
+                                            <img src="{{ url_for('static', filename=comment.author.get_avatar_url()) }}" 
                                                  alt="{{ comment.author.first_name }}" class="rounded-circle" width="40" height="40">
                                         </div>
                                         <div class="ms-3 flex-grow-1">
@@ -169,7 +169,7 @@
                                                         <div class="reply mt-3">
                                                             <div class="d-flex">
                                                                 <div class="flex-shrink-0">
-                                                                    <img src="{{ url_for('static', filename='img/avatars/default.png') }}" 
+                                                                    <img src="{{ url_for('static', filename=reply.author.get_avatar_url()) }}" 
                                                                          alt="{{ reply.author.first_name }}" class="rounded-circle" width="32" height="32">
                                                                 </div>
                                                                 <div class="ms-2">

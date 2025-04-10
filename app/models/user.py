@@ -4,6 +4,7 @@ Handles user authentication, profile management, and relationships between users
 """
 from datetime import datetime, timezone
 import zoneinfo
+import random
 from flask_login import UserMixin
 from app import db, login_manager, bcrypt
 from sqlalchemy.sql import func
@@ -26,6 +27,7 @@ class User(db.Model, UserMixin):
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
     balance = db.Column(db.Float, default=0.0)
+    avatar_id = db.Column(db.Integer, default=0) # 0 for default, 1-10 for other avatars
     created_at_edt = db.Column(db.DateTime, default=datetime.now(zoneinfo.ZoneInfo("America/New_York")))
     last_login_edt = db.Column(db.DateTime, default=datetime.now(zoneinfo.ZoneInfo("America/New_York")))
     is_active = db.Column(db.Boolean, default=True)
@@ -59,6 +61,8 @@ class User(db.Model, UserMixin):
         self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
         self.first_name = first_name
         self.last_name = last_name
+        # Randomly assign an avatar (1-10)
+        self.avatar_id = random.randint(1, 10)
 
     def check_password(self, password):
         """
@@ -172,6 +176,17 @@ class User(db.Model, UserMixin):
         for holding in self.portfolio:
             total_value += holding.quantity * holding.current_price
         return total_value
+    
+    def get_avatar_url(self):
+        """
+        Get the URL for the user's avatar.
+        
+        Returns:
+            String representing the avatar URL path
+        """
+        if self.avatar_id == 0:
+            return 'img/avatars/default.png'
+        return f'img/avatars/avatar{self.avatar_id}.png'
     
     def __repr__(self):
         """String representation of User object"""

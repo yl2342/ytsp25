@@ -24,7 +24,7 @@
                                     <div class="d-flex align-items-center">
                                         <!-- User profile image -->
                                         <div class="flex-shrink-0">
-                                            <img src="{{ url_for('static', filename='img/avatars/default.png') }}" 
+                                            <img src="{{ url_for('static', filename=user.get_avatar_url()) }}" 
                                                  alt="{{ user.first_name }}" class="rounded-circle" width="50" height="50">
                                         </div>
                                         
