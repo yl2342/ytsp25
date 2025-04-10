@@ -1,16 +1,16 @@
-# Yale Trading Simulation Platform (YTSP) - **Alpha Version**
+# Yale Trading Simulation Platform (YTSP) 
 
 A Robinhood-like full-stack web application for Yale students to simulate stock investments, manage financial portfolios, and interact with a community of peers.
 
 --- 
 
-![Yale Trading Platform - by chatgpt](app/static/img/ytsp_dan.png)
+![Yale Trading Platform - by chatgpt](app/static/img/main_demo.png)
 
 ## Project Status
 
-**Current Version: MVP (Minimum Viable Product)**
+**Current Version: Alpha Version**
 
-This is the initial version of the platform with core trading functionality. The application is fully functional with user authentication, trading capabilities, portfolio management, and social features.
+This is the alpha version of the platform with core trading functionality. The application is fully functional with user authentication, trading capabilities, portfolio management, and augmented social features.
 
 ### Roadmap
 
