@@ -1,0 +1,188 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="card shadow">
+                <div class="card-body p-5">
+                    <h1 class="display-5 mb-4">Help & Documentation</h1>
+                    
+                    <div class="row">
+                        <div class="col-lg-3">
+                            <div class="nav flex-column nav-pills me-3 sticky-top" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                                <button class="nav-link active" id="getting-started-tab" data-bs-toggle="pill" data-bs-target="#getting-started" type="button" role="tab">Getting Started</button>
+                                <button class="nav-link" id="trading-tab" data-bs-toggle="pill" data-bs-target="#trading" type="button" role="tab">Trading Stocks</button>
+                                <button class="nav-link" id="portfolio-tab" data-bs-toggle="pill" data-bs-target="#portfolio" type="button" role="tab">Portfolio Management</button>
+                                <button class="nav-link" id="social-tab" data-bs-toggle="pill" data-bs-target="#social" type="button" role="tab">Social Features</button>
+                                <button class="nav-link" id="faq-tab" data-bs-toggle="pill" data-bs-target="#faq" type="button" role="tab">FAQ</button>
+                            </div>
+                        </div>
+                        <div class="col-lg-9">
+                            <div class="tab-content" id="v-pills-tabContent">
+                                <div class="tab-pane fade show active" id="getting-started" role="tabpanel">
+                                    <h3 class="mb-3">Getting Started with Yale Trading</h3>
+                                    
+                                    <div class="card mb-4">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Creating Your Account</h5>
+                                            <p>Sign up with your Yale email to create an account. Each new user starts with $100,000 in virtual currency to begin trading.</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="card mb-4">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Navigating the Dashboard</h5>
+                                            <p>Your dashboard displays:</p>
+                                            <ul>
+                                                <li>Portfolio summary and performance</li>
+                                                <li>Market indices and trends</li>
+                                                <li>Recent transactions</li>
+                                                <li>Social activity from other traders</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="card mb-4">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Searching for Stocks</h5>
+                                            <p>Use the search bar at the top of the page to find stocks by company name or ticker symbol.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="tab-pane fade" id="trading" role="tabpanel">
+                                    <h3 class="mb-3">Trading Stocks</h3>
+                                    
+                                    <div class="card mb-4">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Placing Orders</h5>
+                                            <p>To buy or sell stocks:</p>
+                                            <ol>
+                                                <li>Search for a stock or select from trending stocks</li>
+                                                <li>View the stock details page</li>
+                                                <li>Enter the number of shares you want to buy/sell</li>
+                                                <li>Review and confirm your order</li>
+                                            </ol>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="card mb-4">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Order Types</h5>
+                                            <p>Currently, Yale Trading supports market orders that execute immediately at the current market price.</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="card mb-4">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Trading Hours</h5>
+                                            <p>Trading is available 24/7 in our simulation, unlike real markets that have specific trading hours.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="tab-pane fade" id="portfolio" role="tabpanel">
+                                    <h3 class="mb-3">Portfolio Management</h3>
+                                    
+                                    <div class="card mb-4">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Viewing Your Portfolio</h5>
+                                            <p>Access your portfolio from the dashboard or the Portfolio tab to see:</p>
+                                            <ul>
+                                                <li>Stocks you currently own</li>
+                                                <li>Purchase price and current value</li>
+                                                <li>Profit/loss for each position</li>
+                                                <li>Overall portfolio performance</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="card mb-4">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Managing Cash</h5>
+                                            <p>Your available cash balance is displayed on your dashboard. This is the amount you can use to purchase more stocks.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="tab-pane fade" id="social" role="tabpanel">
+                                    <h3 class="mb-3">Social Features</h3>
+                                    
+                                    <div class="card mb-4">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Following Other Traders</h5>
+                                            <p>Connect with fellow traders:</p>
+                                            <ul>
+                                                <li>Follow other users to see their trading activities</li>
+                                                <li>View their public posts and trading insights</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="card mb-4">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Sharing Trades</h5>
+                                            <p>Share your trades and insights with the community:</p>
+                                            <ul>
+                                                <li>Post about your recent trades</li>
+                                                <li>Share your analysis and trading strategies</li>
+                                                <li>Comment on other users' posts</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="tab-pane fade" id="faq" role="tabpanel">
+                                    <h3 class="mb-3">Frequently Asked Questions</h3>
+                                    
+                                    <div class="accordion" id="faqAccordion">
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header">
+                                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                                    Is this real stock trading?
+                                                </button>
+                                            </h2>
+                                            <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                                                <div class="accordion-body">
+                                                    No, Yale Trading is a simulation platform using virtual currency. No real money is involved.
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                                    Where does the market data come from?
+                                                </button>
+                                            </h2>
+                                            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                                <div class="accordion-body">
+                                                    We use real-time market data from financial APIs to provide the most accurate simulation experience.
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                                    How can I contact support?
+                                                </button>
+                                            </h2>
+                                            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                                <div class="accordion-body">
+                                                    For technical issues or questions, email us at <a href="mailto:yuntian.liu@yale.edu">yuntian.liu@yale.edu</a>.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
