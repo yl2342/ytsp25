@@ -7,6 +7,42 @@ import zoneinfo
 from app import db
 from sqlalchemy.sql import func
 
+class PostInteraction(db.Model):
+    """
+    Tracks user interactions (likes/dislikes) with posts.
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    post_id = db.Column(db.Integer, db.ForeignKey('trading_post.id'), nullable=False)
+    interaction_type = db.Column(db.String(10), nullable=False)  # 'like' or 'dislike'
+    created_at = db.Column(db.DateTime, default=datetime.now(zoneinfo.ZoneInfo("America/New_York")))
+    
+    # Relationships
+    user = db.relationship('User', backref='post_interactions')
+    post = db.relationship('TradingPost', backref='interactions')
+    
+    # Unique constraint to prevent multiple interactions of the same type
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'post_id', 'interaction_type', name='unique_user_post_interaction'),
+    )
+
+    def __init__(self, user_id, post_id, interaction_type):
+        """
+        Initialize a new post interaction.
+        
+        Args:
+            user_id: The ID of the user
+            post_id: The ID of the post
+            interaction_type: Either 'like' or 'dislike'
+        """
+        self.user_id = user_id
+        self.post_id = post_id
+        self.interaction_type = interaction_type
+
+    def __repr__(self):
+        """String representation of PostInteraction object"""
+        return f"PostInteraction(User ID: {self.user_id}, Post ID: {self.post_id}, Type: {self.interaction_type})"
+
 class TradingPost(db.Model):
     """
     Represents a user's post about a trade they made.
@@ -24,8 +60,6 @@ class TradingPost(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now(zoneinfo.ZoneInfo("America/New_York")))
     
     # Relationships
-    likes = db.Column(db.Integer, default=0)
-    dislikes = db.Column(db.Integer, default=0)
     comments = db.relationship('Comment', backref='post', lazy=True, cascade="all, delete-orphan")
     transaction = db.relationship('Transaction', backref='post', uselist=False)
 
@@ -52,13 +86,21 @@ class TradingPost(db.Model):
         self.price = price
         self.is_public = is_public
 
-    def like(self):
-        """Increment the like count for this post"""
-        self.likes += 1
+    @property
+    def likes(self):
+        """Get the number of likes for this post"""
+        return PostInteraction.query.filter_by(
+            post_id=self.id,
+            interaction_type='like'
+        ).count()
         
-    def dislike(self):
-        """Increment the dislike count for this post"""
-        self.dislikes += 1
+    @property
+    def dislikes(self):
+        """Get the number of dislikes for this post"""
+        return PostInteraction.query.filter_by(
+            post_id=self.id,
+            interaction_type='dislike'
+        ).count()
         
     def toggle_visibility(self):
         """

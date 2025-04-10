@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import current_user, login_required
 from app import db
 from app.models.user import User, followers as followers_table
-from app.models.social import TradingPost, Comment
+from app.models.social import TradingPost, Comment, PostInteraction
 from app.forms import UserSearchForm, PostCommentForm, ReplyForm
 from app.utils.stock_utils import get_trending_stocks, get_popular_stocks
 from app.models.stock import Transaction
@@ -179,12 +179,37 @@ def feed():
         followed_user_ids = [user.id for user in current_user.followed.all()]
         followed_user_ids.append(current_user.id)  # Add current user ID
         
+        # Create subqueries for likes and dislikes counts
+        likes_count = db.session.query(
+            PostInteraction.post_id,
+            db.func.count(PostInteraction.id).label('likes_count')
+        ).filter(
+            PostInteraction.interaction_type == 'like'
+        ).group_by(
+            PostInteraction.post_id
+        ).subquery()
+        
+        dislikes_count = db.session.query(
+            PostInteraction.post_id,
+            db.func.count(PostInteraction.id).label('dislikes_count')
+        ).filter(
+            PostInteraction.interaction_type == 'dislike'
+        ).group_by(
+            PostInteraction.post_id
+        ).subquery()
+        
         # Get popular posts (most liked, most recent)
-        popular_posts = TradingPost.query.filter(
+        popular_posts = TradingPost.query.outerjoin(
+            likes_count,
+            TradingPost.id == likes_count.c.post_id
+        ).outerjoin(
+            dislikes_count,
+            TradingPost.id == dislikes_count.c.post_id
+        ).filter(
             TradingPost.user_id.notin_(followed_user_ids),
             TradingPost.is_public == True
         ).order_by(
-            TradingPost.likes.desc(),
+            db.func.coalesce(likes_count.c.likes_count, 0).desc(),
             TradingPost.created_at.desc()
         ).limit(10).all()
         
@@ -281,13 +306,54 @@ def reply_to_comment(comment_id):
 @social_bp.route('/post/<int:post_id>/like', methods=['POST'])
 @login_required
 def like_post(post_id):
-    """Like a trading post"""
+    """Toggle like on a trading post"""
     post = TradingPost.query.get_or_404(post_id)
-    post.like()
+    
+    # Check if user already liked this post
+    existing_like = PostInteraction.query.filter_by(
+        user_id=current_user.id,
+        post_id=post_id,
+        interaction_type='like'
+    ).first()
+    
+    liked = False
+    if existing_like:
+        # User already liked the post, remove the like
+        db.session.delete(existing_like)
+    else:
+        # User hasn't liked the post, add a like
+        # First remove any existing dislike
+        existing_dislike = PostInteraction.query.filter_by(
+            user_id=current_user.id,
+            post_id=post_id,
+            interaction_type='dislike'
+        ).first()
+        if existing_dislike:
+            db.session.delete(existing_dislike)
+        
+        # Add the like
+        like = PostInteraction(
+            user_id=current_user.id,
+            post_id=post_id,
+            interaction_type='like'
+        )
+        db.session.add(like)
+        liked = True
+    
     db.session.commit()
     
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return jsonify({'likes': post.likes})
+        button_class = "btn-primary" if liked else "btn-outline-primary"
+        return f'''
+            <button class="btn btn-sm {button_class} me-2" 
+                   hx-post="{url_for('social.like_post', post_id=post.id)}"
+                   hx-swap="outerHTML"
+                   hx-target="this"
+                   hx-headers='{{"X-Requested-With": "XMLHttpRequest"}}'>
+                <i class="far fa-thumbs-up me-1"></i> 
+                <span id="post-likes-{post.id}">{post.likes}</span>
+            </button>
+        '''
     
     return redirect(url_for('social.view_post', post_id=post_id))
 
@@ -295,13 +361,54 @@ def like_post(post_id):
 @social_bp.route('/post/<int:post_id>/dislike', methods=['POST'])
 @login_required
 def dislike_post(post_id):
-    """Dislike a trading post"""
+    """Toggle dislike on a trading post"""
     post = TradingPost.query.get_or_404(post_id)
-    post.dislike()
+    
+    # Check if user already disliked this post
+    existing_dislike = PostInteraction.query.filter_by(
+        user_id=current_user.id,
+        post_id=post_id,
+        interaction_type='dislike'
+    ).first()
+    
+    disliked = False
+    if existing_dislike:
+        # User already disliked the post, remove the dislike
+        db.session.delete(existing_dislike)
+    else:
+        # User hasn't disliked the post, add a dislike
+        # First remove any existing like
+        existing_like = PostInteraction.query.filter_by(
+            user_id=current_user.id,
+            post_id=post_id,
+            interaction_type='like'
+        ).first()
+        if existing_like:
+            db.session.delete(existing_like)
+        
+        # Add the dislike
+        dislike = PostInteraction(
+            user_id=current_user.id,
+            post_id=post_id,
+            interaction_type='dislike'
+        )
+        db.session.add(dislike)
+        disliked = True
+    
     db.session.commit()
     
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return jsonify({'dislikes': post.dislikes})
+        button_class = "btn-secondary" if disliked else "btn-outline-secondary"
+        return f'''
+            <button class="btn btn-sm {button_class}" 
+                   hx-post="{url_for('social.dislike_post', post_id=post.id)}"
+                   hx-swap="outerHTML"
+                   hx-target="this"
+                   hx-headers='{{"X-Requested-With": "XMLHttpRequest"}}'>
+                <i class="far fa-thumbs-down me-1"></i> 
+                <span id="post-dislikes-{post.id}">{post.dislikes}</span>
+            </button>
+        '''
     
     return redirect(url_for('social.view_post', post_id=post_id))
 

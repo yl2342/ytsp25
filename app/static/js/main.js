@@ -99,6 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const url = this.getAttribute('href');
             const counterElement = this.querySelector('.counter');
+            const isLike = this.classList.contains('like-btn');
             
             fetch(url, {
                 method: 'POST',
@@ -107,12 +108,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     'Content-Type': 'application/json'
                 }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (this.classList.contains('like-btn')) {
-                    counterElement.textContent = data.likes;
+            .then(response => response.text())
+            .then(html => {
+                // Update the counter
+                counterElement.outerHTML = html;
+                
+                // Toggle button classes
+                if (isLike) {
+                    this.classList.toggle('btn-outline-primary');
+                    this.classList.toggle('btn-primary');
                 } else {
-                    counterElement.textContent = data.dislikes;
+                    this.classList.toggle('btn-outline-secondary');
+                    this.classList.toggle('btn-secondary');
                 }
             })
             .catch(error => console.error('Error updating like/dislike:', error));

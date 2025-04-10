@@ -46,7 +46,7 @@ def seed_database():
     from app import create_app, db
     from app.models.user import User
     from app.models.stock import StockHolding, Transaction
-    from app.models.social import TradingPost, Comment
+    from app.models.social import TradingPost, Comment, PostInteraction
     
     app = create_app()
     
@@ -201,17 +201,42 @@ def seed_database():
                     post_time = user.created_at_edt + timedelta(days=random.randint(1, 10))
                     post.created_at = post_time
                     
+                    # Add the post first and commit to get its ID
+                    db.session.add(post)
+                    db.session.commit()
+                    
                     # SEED users get more engagement on their posts
                     if user.last_name == 'SEED':
-                        post.likes = random.randint(5, 30)
-                        post.dislikes = random.randint(0, 10)
+                        # Create random likes
+                        num_likes = random.randint(5, 30)
+                        num_dislikes = random.randint(0, 10)
                     else:
-                        post.likes = random.randint(0, 15)
-                        post.dislikes = random.randint(0, 5)
-                        
-                    db.session.add(post)
-                    # Flush to get the post ID
-                    db.session.flush()
+                        num_likes = random.randint(0, 15)
+                        num_dislikes = random.randint(0, 5)
+                    
+                    # Add random likes
+                    potential_likers = [u for u in all_users if u.id != user.id]
+                    likers = random.sample(potential_likers, min(len(potential_likers), num_likes))
+                    for liker in likers:
+                        interaction = PostInteraction(
+                            user_id=liker.id,
+                            post_id=post.id,
+                            interaction_type='like'
+                        )
+                        interaction.created_at = post_time + timedelta(minutes=random.randint(1, 60))
+                        db.session.add(interaction)
+                    
+                    # Add random dislikes
+                    potential_dislikers = [u for u in all_users if u.id != user.id and u not in likers]
+                    dislikers = random.sample(potential_dislikers, min(len(potential_dislikers), num_dislikes))
+                    for disliker in dislikers:
+                        interaction = PostInteraction(
+                            user_id=disliker.id,
+                            post_id=post.id,
+                            interaction_type='dislike'
+                        )
+                        interaction.created_at = post_time + timedelta(minutes=random.randint(1, 60))
+                        db.session.add(interaction)
                     
                     # Create purchase transaction linked to the post
                     transaction = Transaction(
@@ -279,6 +304,9 @@ def seed_database():
                                 )
                                 reply.created_at = comment.created_at + timedelta(hours=random.randint(1, 12))
                                 db.session.add(reply)
+                    
+                    # Commit all the interactions, comments, and transactions
+                    db.session.commit()
                 else:
                     # Just create a transaction without a post
                     transaction = Transaction(
@@ -363,10 +391,38 @@ def seed_database():
                                 is_public=True
                             )
                             sell_post.created_at = sell_transaction.timestamp + timedelta(minutes=random.randint(1, 10))
-                            sell_post.likes = random.randint(3, 20)
-                            sell_post.dislikes = random.randint(0, 8)
+                            
+                            # Add the sell post first and commit to get its ID
                             db.session.add(sell_post)
-                            db.session.flush()
+                            db.session.commit()
+                            
+                            # Add random likes and dislikes to sell posts
+                            num_likes = random.randint(3, 20)
+                            num_dislikes = random.randint(0, 8)
+                            
+                            # Add random likes
+                            potential_likers = [u for u in all_users if u.id != user.id]
+                            likers = random.sample(potential_likers, min(len(potential_likers), num_likes))
+                            for liker in likers:
+                                interaction = PostInteraction(
+                                    user_id=liker.id,
+                                    post_id=sell_post.id,
+                                    interaction_type='like'
+                                )
+                                interaction.created_at = sell_post.created_at + timedelta(minutes=random.randint(1, 60))
+                                db.session.add(interaction)
+                            
+                            # Add random dislikes
+                            potential_dislikers = [u for u in all_users if u.id != user.id and u not in likers]
+                            dislikers = random.sample(potential_dislikers, min(len(potential_dislikers), num_dislikes))
+                            for disliker in dislikers:
+                                interaction = PostInteraction(
+                                    user_id=disliker.id,
+                                    post_id=sell_post.id,
+                                    interaction_type='dislike'
+                                )
+                                interaction.created_at = sell_post.created_at + timedelta(minutes=random.randint(1, 60))
+                                db.session.add(interaction)
                             
                             # Link transaction to post
                             sell_transaction.trading_post_id = sell_post.id
@@ -391,6 +447,9 @@ def seed_database():
                                     )
                                     comment.created_at = sell_post.created_at + timedelta(hours=random.randint(1, 24))
                                     db.session.add(comment)
+                            
+                            # Commit all the interactions, comments, and transaction
+                            db.session.commit()
                         
                         # Update holding quantity
                         holding.quantity -= sell_quantity

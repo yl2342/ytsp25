@@ -167,17 +167,19 @@
                                     <!-- Post Actions -->
                                     <div class="d-flex justify-content-between align-items-center border-top pt-3">
                                         <div>
-                                            <button class="btn btn-sm btn-outline-primary me-2" 
+                                            <button class="btn btn-sm {% if current_user.id in post.interactions|selectattr('interaction_type', 'equalto', 'like')|map(attribute='user_id')|list %}btn-primary{% else %}btn-outline-primary{% endif %} me-2" 
                                                     hx-post="{{ url_for('social.like_post', post_id=post.id) }}"
                                                     hx-swap="outerHTML"
-                                                    hx-target="#post-likes-{{ post.id }}">
+                                                    hx-target="this"
+                                                    hx-headers='{"X-Requested-With": "XMLHttpRequest"}'>
                                                 <i class="far fa-thumbs-up me-1"></i> 
                                                 <span id="post-likes-{{ post.id }}">{{ post.likes }}</span>
                                             </button>
-                                            <button class="btn btn-sm btn-outline-secondary" 
+                                            <button class="btn btn-sm {% if current_user.id in post.interactions|selectattr('interaction_type', 'equalto', 'dislike')|map(attribute='user_id')|list %}btn-secondary{% else %}btn-outline-secondary{% endif %}" 
                                                     hx-post="{{ url_for('social.dislike_post', post_id=post.id) }}"
                                                     hx-swap="outerHTML"
-                                                    hx-target="#post-dislikes-{{ post.id }}">
+                                                    hx-target="this"
+                                                    hx-headers='{"X-Requested-With": "XMLHttpRequest"}'>
                                                 <i class="far fa-thumbs-down me-1"></i> 
                                                 <span id="post-dislikes-{{ post.id }}">{{ post.dislikes }}</span>
                                             </button>

@@ -1,4 +1,4 @@
-# Yale Trading Simulation Platform (YTSP)
+# Yale Trading Simulation Platform (YTSP) - **Alpha Version**
 
 A Robinhood-like full-stack web application for Yale students to simulate stock investments, manage financial portfolios, and interact with a community of peers.
 
@@ -15,7 +15,7 @@ This is the initial version of the platform with core trading functionality. The
 ### Roadmap
 
 * **March 28 2024**: MVP Release with core trading, portfolio management, and social features ✅
-* **April 9**: Alpha Version: Enhanced UI/UX and expanded community features
+* **April 9**: Alpha Version: Enhanced UI/UX and expanded community feature (like/dislike posts) ✅
 * **April 18 2024**: Beta Version: Add AI-Assisted Trading Advice integration and enhanced analytics
 * **May 3 2024**: Final Version: Finalize UI/UX design, comprehensive testing, documentation, and deployment
 
@@ -57,7 +57,8 @@ This is the initial version of the platform with core trading functionality. The
 - **User Network**: Follow other Yale students to build your investment network
 - **Activity Feed**: View trading activities on the social feed platform or shared by the people you follow
 - **Trading Posts**: Share insights about your trades with custom messages
-- **Engagement**: Comment on trading posts
+- **Engagement**: Comment on trading posts, like or dislike posts
+- **Interactive Reactions**: Like/dislike trading posts with visual feedback and counter updates
 - **Privacy Control**: Set trading activities as public or private
 
 ---
@@ -65,7 +66,6 @@ This is the initial version of the platform with core trading functionality. The
 ## Upcoming Features
 
 ### Expanded social features
-- **Likes/Dislikes**: Like/Dislike trading posts from other users
 - **Shares/Reposts**: Share trading posts from other users
 - **Replies**: Reply to trading posts from other users
 - **Leaderboards**: Compare performance with peers
@@ -228,6 +228,8 @@ python run.py
 3. To engage with posts:
    - Browse the "Social Feed" to see posts from users you follow
    - Comment on posts
+   - Like or dislike posts by clicking the thumbs up/down buttons
+   - Click again on a liked/disliked post to remove your reaction
 
 ---
 
