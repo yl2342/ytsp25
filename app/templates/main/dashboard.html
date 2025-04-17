@@ -94,7 +94,7 @@
                     <h5 class="mb-0">Portfolio Snapshot</h5>
                 </div>
                 <div class="card-body p-2">
-                    {% if portfolio.stocks %}
+                    {% if portfolio.holdings %}
                         <div class="table-responsive">
                             <table class="table table-sm table-hover mb-0">
                                 <thead>
@@ -106,22 +106,23 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for stock in portfolio.stocks[:5] %}
+                                    {% for stock in portfolio.holdings[:5] %}
                                         <tr>
                                             <td>
-                                                <a href="{{ url_for('trading.stock_detail', ticker=stock.ticker) }}">{{ stock.ticker }}</a>
+                                                <a href="{{ url_for('trading.stock_detail', ticker=stock.get('ticker')) }}">{{ stock.get('ticker') }}</a>
                                             </td>
-                                            <td>{{ "%.2f"|format(stock.quantity) }}</td>
-                                            <td>${{ "%.2f"|format(stock.market_value) }}</td>
-                                            <td class="{% if stock.profit_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
-                                                {% if stock.profit_loss >= 0 %}+{% endif %}${{ "%.2f"|format(stock.profit_loss) }}
+                                            <td>{{ "%.2f"|format(stock.get('quantity', 0)) }}</td>
+                                            <td>${{ "%.2f"|format(stock.get('market_value', 0)) }}</td>
+                                            <td class="{% if stock.get('profit', 0) >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                {% if stock.get('profit', 0) >= 0 %}+{% endif %}${{ "%.2f"|format(stock.get('profit', 0)) }}
+                                                <small class="d-block">({{ "%.1f"|format(stock.get('profit_percent', 0)) }}%)</small>
                                             </td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
                         </div>
-                        {% if portfolio.stocks|length > 5 %}
+                        {% if portfolio.holdings|length > 5 %}
                             <div class="text-center mt-2">
                                 <a href="{{ url_for('trading.portfolio') }}" class="btn btn-sm btn-outline-primary">
                                     View All Holdings

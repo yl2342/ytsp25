@@ -194,8 +194,8 @@
                         </div>
                         <div class="col">
                             <div class="text-muted small">Day Change</div>
-                            <div class="{% if portfolio.day_change|default(0) >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
-                                {% if portfolio.day_change|default(0) >= 0 %}+{% endif %}${{ portfolio.day_change|default(0)|round(2) }}
+                            <div class="{% if portfolio.total_day_change|default(0) >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
+                                {% if portfolio.total_day_change|default(0) >= 0 %}+{% endif %}${{ portfolio.total_day_change|default(0)|round(2) }}
                             </div>
                         </div>
                     </div>

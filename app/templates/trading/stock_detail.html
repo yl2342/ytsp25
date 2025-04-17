@@ -43,16 +43,21 @@
                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
                     <h2 class="h5 mb-0">Price History</h2>
                     <div class="btn-group btn-group-sm" role="group">
-                        <button type="button" class="btn btn-outline-primary active">1M</button>
-                        <button type="button" class="btn btn-outline-primary">3M</button>
-                        <button type="button" class="btn btn-outline-primary">6M</button>
-                        <button type="button" class="btn btn-outline-primary">1Y</button>
-                        <button type="button" class="btn btn-outline-primary">All</button>
+                        <button type="button" class="btn btn-outline-primary chart-period-btn" data-period="1mo">1M</button>
+                        <button type="button" class="btn btn-outline-primary chart-period-btn" data-period="3mo">3M</button>
+                        <button type="button" class="btn btn-outline-primary active chart-period-btn" data-period="6mo">6M</button>
+                        <button type="button" class="btn btn-outline-primary chart-period-btn" data-period="1y">1Y</button>
+                        <button type="button" class="btn btn-outline-primary chart-period-btn" data-period="max">All</button>
                     </div>
                 </div>
                 <div class="card-body">
                     <div class="chart-container">
                         <canvas id="stockChart"></canvas>
+                        {% if not historical_data %}
+                        <div id="chart-message" class="text-center text-muted py-5">
+                            Historical price data is currently unavailable for this stock.
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -137,8 +142,8 @@
                                 {% for transaction in recent_transactions %}
                                 <tr>
                                     <td>{{ transaction.timestamp.strftime('%m/%d/%Y %H:%M') }}</td>
-                                    <td class="{% if transaction.action == 'buy' %}text-success{% else %}text-danger{% endif %} fw-bold">
-                                        {{ transaction.action|upper }}
+                                    <td class="{% if transaction.transaction_type == 'buy' %}text-success{% else %}text-danger{% endif %} fw-bold">
+                                        {{ transaction.transaction_type|upper }}
                                     </td>
                                     <td>{{ transaction.quantity|int }}</td>
                                     <td>${{ transaction.price|round(2) }}</td>
@@ -166,9 +171,9 @@
                         {{ trade_form.company_name }}
                         {{ trade_form.price }}
                         
-                        <div class="form-group mb-3">
-                            <label class="form-label">Action</label>
-                            <div class="btn-group w-100" role="group">
+                        <fieldset class="form-group mb-3">
+                            <legend class="form-label">Action</legend>
+                            <div class="btn-group w-100" role="group" aria-labelledby="action-legend">
                                 <input type="radio" class="btn-check" name="action" value="buy" id="action-buy" 
                                        {% if not user_holding %}checked{% endif %} autocomplete="off">
                                 <label class="btn btn-outline-success" for="action-buy">Buy</label>
@@ -177,7 +182,7 @@
                                        {% if not user_holding %}disabled{% endif %} autocomplete="off">
                                 <label class="btn btn-outline-danger" for="action-sell">Sell</label>
                             </div>
-                        </div>
+                        </fieldset>
                         
                         <div class="form-group mb-3">
                             <label class="form-label" for="quantity">Quantity</label>
@@ -217,7 +222,7 @@
                         </div>
                         <div class="d-flex justify-content-between">
                             <span>Average Cost:</span>
-                            <span>${{ (user_holding.average_price|default(0))|round(2) }}</span>
+                            <span>${{ (user_holding.average_buy_price|default(0))|round(2) }}</span>
                         </div>
                         <div class="d-flex justify-content-between">
                             <span>Total Value:</span>
@@ -225,8 +230,8 @@
                         </div>
                         <div class="d-flex justify-content-between">
                             <span>Profit/Loss:</span>
-                            {% set pl = ((stock.current_price|default(0)) - (user_holding.average_price|default(0))) * (user_holding.quantity|default(0)) %}
-                            {% set pl_percent = ((stock.current_price|default(0)) - (user_holding.average_price|default(0))) / (user_holding.average_price|default(1)) * 100 %}
+                            {% set pl = ((stock.current_price|default(0)) - (user_holding.average_buy_price|default(0))) * (user_holding.quantity|default(0)) %}
+                            {% set pl_percent = ((stock.current_price|default(0)) - (user_holding.average_buy_price|default(0))) / (user_holding.average_buy_price|default(1)) * 100 %}
                             <span class="{% if pl >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
                                 {% if pl >= 0 %}+{% endif %}${{ pl|round(2) }} ({{ pl_percent|round(2) }}%)
                             </span>
@@ -292,9 +297,7 @@
 
 {% endblock %}
 
-{% block scripts %}
-{{ super() }}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Stock chart
@@ -307,17 +310,24 @@
             historicalData = JSON.parse(historicalDataStr);
         } catch (e) {
             console.error("Error parsing historical data:", e);
-            // Provide empty fallback data if parsing fails
-            historicalData = [];
+            historicalData = []; // Provide empty fallback data if parsing fails
         }
         
         // Ensure we have valid data for the chart
         const dates = historicalData.map(item => item.date || '');
         const prices = historicalData.map(item => item.close || 0);
         
+        // Hide message if chart is created
+        const chartMessage = document.getElementById('chart-message');
+
+        // Check condition for creating chart
+        const shouldCreateChart = ctx && dates.length > 0 && prices.length > 0;
+
         // Only create chart if we have data and a canvas element
-        if (ctx && dates.length > 0 && prices.length > 0) {
-            const stockChart = new Chart(ctx, {
+        let stockChart = null; // <-- Declare stockChart outside the if block
+        if (shouldCreateChart) {
+            if (chartMessage) chartMessage.style.display = 'none'; // Hide message
+            stockChart = new Chart(ctx, { // <-- Assign to the outer variable
                 type: 'line',
                 data: {
                     labels: dates,
@@ -369,9 +379,62 @@
                 }
             });
         } else {
-            console.log("Not creating chart due to missing data or canvas element");
+            if (chartMessage) chartMessage.style.display = 'block'; // Ensure message is shown
         }
         
+        // Function to update chart data
+        function updateChart(period) {
+            if (!stockChart) return; // Don't do anything if chart wasn't initialized
+
+            fetch(`/api/stock/history/{{ stock.ticker }}?period=${period}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success && data.data && data.data.length > 0) {
+                        const newDates = data.data.map(item => item.date || '');
+                        const newPrices = data.data.map(item => item.close || 0);
+                        
+                        stockChart.data.labels = newDates;
+                        stockChart.data.datasets[0].data = newPrices;
+                        stockChart.update();
+                        
+                        // Optionally hide message if it was visible
+                        if (chartMessage) chartMessage.style.display = 'none'; 
+                    } else {
+                        console.error("Failed to load chart data for period:", period, data.message);
+                        // Show message if data loading fails
+                        if (chartMessage) chartMessage.style.display = 'block'; 
+                        // Optionally clear chart
+                        // stockChart.data.labels = [];
+                        // stockChart.data.datasets[0].data = [];
+                        // stockChart.update();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching historical data:', error);
+                    if (chartMessage) chartMessage.style.display = 'block';
+                });
+        }
+
+        // Add event listeners to period buttons
+        const periodButtons = document.querySelectorAll('.chart-period-btn'); // Add a class to the buttons
+        periodButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active class from all buttons
+                periodButtons.forEach(btn => btn.classList.remove('active'));
+                // Add active class to the clicked button
+                this.classList.add('active');
+                
+                // Get the period from data attribute
+                const period = this.dataset.period;
+                updateChart(period);
+            });
+        });
+
         // Calculate estimated total when quantity changes
         const tradeForm = document.getElementById('trade-form');
         
@@ -385,8 +448,6 @@
                 console.error("Error parsing stock price:", e);
                 stockPrice = 0;
             }
-            
-            console.log("Stock price for calculations:", stockPrice);
             
             const hiddenPriceInput = tradeForm.querySelector('input[name="price"]');
             

@@ -21,23 +21,25 @@ document.addEventListener('DOMContentLoaded', function() {
         const maxShares = parseFloat(document.getElementById('user-shares')?.dataset?.shares || 0);
         
         // Update validation based on buy/sell action
-        actionSelect.addEventListener('change', function() {
-            if (this.value === 'sell') {
-                quantityInput.setAttribute('max', maxShares);
-                quantityInput.setAttribute('data-bs-toggle', 'tooltip');
-                quantityInput.setAttribute('data-bs-placement', 'top');
-                quantityInput.setAttribute('title', `Maximum: ${maxShares} shares`);
-                new bootstrap.Tooltip(quantityInput);
-            } else {
-                quantityInput.removeAttribute('max');
-                const tooltip = bootstrap.Tooltip.getInstance(quantityInput);
-                if (tooltip) {
-                    tooltip.dispose();
+        if (actionSelect) {
+            actionSelect.addEventListener('change', function() {
+                if (this.value === 'sell') {
+                    if (quantityInput) quantityInput.setAttribute('max', maxShares);
+                    if (quantityInput) quantityInput.setAttribute('data-bs-toggle', 'tooltip');
+                    if (quantityInput) quantityInput.setAttribute('data-bs-placement', 'top');
+                    if (quantityInput) quantityInput.setAttribute('title', `Maximum: ${maxShares} shares`);
+                    if (quantityInput) new bootstrap.Tooltip(quantityInput);
+                } else {
+                    if (quantityInput) quantityInput.removeAttribute('max');
+                    const tooltip = quantityInput ? bootstrap.Tooltip.getInstance(quantityInput) : null;
+                    if (tooltip) {
+                        tooltip.dispose();
+                    }
+                    if (quantityInput) quantityInput.removeAttribute('data-bs-toggle');
+                    if (quantityInput) quantityInput.removeAttribute('title');
                 }
-                quantityInput.removeAttribute('data-bs-toggle');
-                quantityInput.removeAttribute('title');
-            }
-        });
+            });
+        }
         
         // Form validation
         tradeForm.addEventListener('submit', function(e) {

@@ -1,9 +1,10 @@
 from app import db
 from app.models.stock import StockHolding, Transaction
 from app.models.social import TradingPost
-from app.utils.stock_utils import get_stock_info, get_current_price
+from app.utils.stock_utils import get_stock_info, get_current_price, get_stock_historical_data
 from sqlalchemy.exc import SQLAlchemyError
 import logging
+import yfinance as yf
 
 logger = logging.getLogger(__name__)
 
@@ -196,7 +197,7 @@ def execute_sell(user, ticker, quantity, price, make_public=False, trading_note=
 
 def get_portfolio_summary(user):
     """
-    Get a summary of the user's portfolio
+    Get a summary of the user's portfolio, including day change.
     
     Args:
         user: User model object
@@ -210,28 +211,45 @@ def get_portfolio_summary(user):
         # Calculate portfolio statistics
         total_value = 0
         total_cost = 0
+        total_day_change = 0
         stocks = []
         
         for holding in holdings:
+            day_change = 0
             try:
                 # Update current price
                 current_price = get_current_price(holding.ticker)
-                
-                # Protect against API failures by using stored price if needed
+                previous_close = 0
+
+                # Fetch 2 days history to get previous close
+                try:
+                    stock_hist = yf.Ticker(holding.ticker).history(period="2d")
+                    if not stock_hist.empty and len(stock_hist) >= 2:
+                        previous_close = stock_hist['Close'].iloc[-2]
+                    elif not stock_hist.empty:
+                        # Fallback if only 1 day of data (e.g., new IPO)
+                        previous_close = stock_hist['Close'].iloc[-1] 
+                except Exception as hist_e:
+                    logger.warning(f"Could not get history for {holding.ticker} to calculate day change: {hist_e}")
+
+                # Protect against API failures for current price
                 if current_price <= 0:
-                    logger.warning(f"Got invalid price (${current_price}) for {holding.ticker}, using last known price")
+                    logger.warning(f"Got invalid current price (${current_price}) for {holding.ticker}, using last known price")
                     current_price = holding.current_price
-                    
-                    # If still 0, use average buy price as a last resort
                     if current_price <= 0:
-                        logger.warning(f"Using average buy price for {holding.ticker} as fallback")
+                        logger.warning(f"Using average buy price for {holding.ticker} as current price fallback")
                         current_price = holding.average_buy_price
                 
-                # Only update the price if we got a valid new price
+                # Only update the price in DB if we got a valid new price
                 if current_price > 0:
                     holding.current_price = current_price
                 
-                # Calculate values
+                # Calculate Day Change if we have previous close
+                if previous_close > 0 and current_price > 0:
+                    day_change = (current_price - previous_close) * holding.quantity
+                    total_day_change += day_change
+                
+                # Calculate P/L values
                 market_value = holding.quantity * holding.current_price
                 cost_basis = holding.quantity * holding.average_buy_price
                 profit_loss = market_value - cost_basis
@@ -251,30 +269,38 @@ def get_portfolio_summary(user):
                     'market_value': market_value,
                     'cost_basis': cost_basis,
                     'profit': profit_loss,
-                    'profit_percent': profit_loss_percent
+                    'profit_percent': profit_loss_percent,
+                    'day_change': day_change
                 })
             except Exception as stock_e:
                 logger.error(f"Error processing holding {holding.ticker}: {str(stock_e)}")
-                # Still include the stock with last known values
-                market_value = holding.quantity * holding.current_price
-                cost_basis = holding.quantity * holding.average_buy_price
-                profit_loss = market_value - cost_basis
-                profit_loss_percent = (profit_loss / cost_basis * 100) if cost_basis > 0 else 0
-                
-                total_value += market_value
-                total_cost += cost_basis
-                
-                stocks.append({
-                    'ticker': holding.ticker,
-                    'company_name': holding.company_name,
-                    'quantity': holding.quantity,
-                    'average_price': holding.average_buy_price,
-                    'current_price': holding.current_price,
-                    'market_value': market_value,
-                    'cost_basis': cost_basis,
-                    'profit': profit_loss,
-                    'profit_percent': profit_loss_percent
-                })
+                # Attempt to include stock with last known values even on error
+                try:
+                    market_value = holding.quantity * holding.current_price
+                    cost_basis = holding.quantity * holding.average_buy_price
+                    profit_loss = market_value - cost_basis
+                    profit_loss_percent = (profit_loss / cost_basis * 100) if cost_basis > 0 else 0
+                    day_change_fallback = 0
+
+                    total_value += market_value
+                    total_cost += cost_basis
+                    # Don't add to total_day_change if error occurred
+
+                    stocks.append({
+                        'ticker': holding.ticker,
+                        'company_name': holding.company_name,
+                        'quantity': holding.quantity,
+                        'average_price': holding.average_buy_price,
+                        'current_price': holding.current_price,
+                        'market_value': market_value,
+                        'cost_basis': cost_basis,
+                        'profit': profit_loss,
+                        'profit_percent': profit_loss_percent,
+                        'day_change': day_change_fallback
+                    })
+                except Exception as fallback_e:
+                     logger.error(f"Failed to add fallback holding data for {holding.ticker}: {fallback_e}")
+
         
         # Calculate overall profit/loss
         total_profit_loss = total_value - total_cost
@@ -289,19 +315,22 @@ def get_portfolio_summary(user):
             'total_account_value': user.balance + total_value,
             'holdings': stocks,
             'total_profit_loss': total_profit_loss,
-            'total_profit_loss_percent': total_profit_loss_percent
+            'total_profit_loss_percent': total_profit_loss_percent,
+            'total_day_change': total_day_change
         }
     
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error getting portfolio summary for user {user.id}: {str(e)}")
+        # Return default structure on error
         return {
             'cash_balance': user.balance,
             'portfolio_value': 0,
             'total_account_value': user.balance,
             'holdings': [],
             'total_profit_loss': 0,
-            'total_profit_loss_percent': 0
+            'total_profit_loss_percent': 0,
+            'total_day_change': 0 
         }
 
 
