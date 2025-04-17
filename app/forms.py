@@ -5,36 +5,27 @@ Defines all WTForms classes used for user input throughout the application.
 from flask_wtf import FlaskForm
 from wtforms import (
     StringField, PasswordField, SubmitField, BooleanField, 
-    TextAreaField, FloatField, SelectField, HiddenField
+    TextAreaField, FloatField, SelectField, HiddenField, RadioField
 )
 from wtforms.validators import (
     DataRequired, Length, Email, EqualTo, ValidationError, NumberRange
 )
 from app.models.user import User
 
-class RegistrationForm(FlaskForm):
-    """Form for new user registration"""
+class CasRegistrationForm(FlaskForm):
+    """Form for new user registration with CAS"""
     net_id = StringField('Yale Net ID', validators=[DataRequired(), Length(min=2, max=20)])
     first_name = StringField('First Name', validators=[DataRequired(), Length(min=2, max=50)])
     last_name = StringField('Last Name', validators=[DataRequired(), Length(min=2, max=50)])
-    password = PasswordField('Password', validators=[DataRequired()])
-    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
-    submit = SubmitField('Sign Up')
+    avatar_id = RadioField('Choose Your Avatar', choices=[(str(i), f'Avatar {i}') for i in range(1, 11)], 
+                          validators=[DataRequired()], default='1')
+    submit = SubmitField('Proceed to Yale Login')
 
     def validate_net_id(self, net_id):
         """Validates that the NetID is not already in use"""
         user = User.query.filter_by(net_id=net_id.data).first()
         if user:
-            raise ValidationError('That net ID is already registered. Please use a different one.')
-
-
-class LoginForm(FlaskForm):
-    """Form for user login"""
-    net_id = StringField('Yale Net ID', validators=[DataRequired()])
-    password = PasswordField('Password', validators=[DataRequired()])
-    remember = BooleanField('Remember Me')
-    submit = SubmitField('Login')
-
+            raise ValidationError('That Net ID is already registered. Please login instead.')
 
 class FundDepositForm(FlaskForm):
     """Form for adding funds to account"""

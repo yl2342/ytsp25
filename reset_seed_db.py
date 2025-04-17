@@ -36,10 +36,20 @@ def reset_database():
     
     with app.app_context():
         print("Creating new database structure...")
+        # Drop all tables if they exist to ensure clean slate
+        db.drop_all()
         # Create all tables
         db.create_all()
     
     print("Database has been reset successfully.")
+    
+    # Instructions for clearing browser sessions
+    print("\n*** IMPORTANT: You may need to clear your browser cookies/cache ***")
+    print("If you still see 'Net ID already registered' errors after reset:")
+    print("1. Clear your browser cookies for this site")
+    print("2. Try using incognito/private browsing mode")
+    print("3. Or restart your Flask server completely\n")
+    
     return True
 
 def seed_database():
@@ -57,7 +67,6 @@ def seed_database():
         print("Creating users...")
         admin = User(
             net_id='admin',
-            password='password123',
             first_name='Admin',
             last_name='User'
         )
@@ -83,7 +92,6 @@ def seed_database():
             # Create the user
             seed_user = User(
                 net_id=net_id,
-                password='password123',
                 first_name=first_name,
                 last_name='SEED'  # All have SEED as last name for identification
             )
@@ -467,10 +475,10 @@ def seed_database():
         
         # Print summary of seed users
         print("\nCreated the following users:")
-        print(f"- Admin User (net_id: admin, password: password123)")
+        print(f"- Admin User (net_id: admin)")
         print("\nCreated the following SEED users:")
         for user in seed_users:
-            print(f"- {user.first_name} SEED (net_id: {user.net_id}, password: password123)")
+            print(f"- {user.first_name} SEED (net_id: {user.net_id})")
             
         # Print statistics
         post_count = db.session.query(TradingPost).count()
@@ -484,6 +492,9 @@ def seed_database():
         print(f"- {comment_count} comments created")
         print(f"- {transaction_count} transactions created")
         print(f"- {holding_count} stock holdings created")
+        
+        print("\nNOTE: Users are created without passwords since the application uses Yale CAS authentication.")
+        print("To use these accounts, manually update your session data or register with these NetIDs via the Yale CAS test interface.")
 
 if __name__ == "__main__":
     if reset_database():
@@ -491,7 +502,7 @@ if __name__ == "__main__":
         print("Database reset and seeding complete!")
         print("You can now run the application with 'python run.py'")
         print("\nSample user credentials:")
-        print("Admin: net_id='admin', password='password123'")
+        print("Admin: net_id='admin' (use Yale CAS for authentication)")
         print("(Plus SEED users listed above)")
     else:
         print("Database reset was cancelled.") 

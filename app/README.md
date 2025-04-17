@@ -4,7 +4,7 @@ This directory contains the core application code for the Yale Trading Simulatio
 
 ## Project Status
 
-**Current Version: MVP (Minimum Viable Product)**
+**Current Version: Alpha Version**
 
 This is the initial version of the platform with core trading functionality. The application is fully functional with user authentication, trading capabilities, portfolio management, and social features.
 

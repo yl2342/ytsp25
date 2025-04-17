@@ -23,9 +23,8 @@ class User(db.Model, UserMixin):
     # Basic user information
     id = db.Column(db.Integer, primary_key=True)
     net_id = db.Column(db.String(20), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
-    first_name = db.Column(db.String(50), nullable=False)
-    last_name = db.Column(db.String(50), nullable=False)
+    first_name = db.Column(db.String(50), nullable=True)
+    last_name = db.Column(db.String(50), nullable=True)
     balance = db.Column(db.Float, default=0.0)
     avatar_id = db.Column(db.Integer, default=0) # 0 for default, 1-10 for other avatars
     created_at_edt = db.Column(db.DateTime, default=datetime.now(zoneinfo.ZoneInfo("America/New_York")))
@@ -47,34 +46,21 @@ class User(db.Model, UserMixin):
         backref=db.backref('followers', lazy='dynamic'), lazy='dynamic'
     )
     
-    def __init__(self, net_id, password, first_name, last_name):
+    def __init__(self, net_id, first_name=None, last_name=None, avatar_id=None):
         """
         Initialize a new user with the provided information.
         
         Args:
             net_id: The Yale NetID (username)
-            password: Plain text password (will be hashed)
-            first_name: User's first name
-            last_name: User's last name
+            first_name: User's first name (optional)
+            last_name: User's last name (optional)
+            avatar_id: User's avatar ID (optional, randomly assigned if not provided)
         """
         self.net_id = net_id
-        self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
         self.first_name = first_name
         self.last_name = last_name
-        # Randomly assign an avatar (1-10)
-        self.avatar_id = random.randint(1, 10)
-
-    def check_password(self, password):
-        """
-        Verify a password against the stored hash.
-        
-        Args:
-            password: Plain text password to check
-            
-        Returns:
-            Boolean indicating if the password is correct
-        """
-        return bcrypt.check_password_hash(self.password_hash, password)
+        # Use provided avatar_id or randomly assign one
+        self.avatar_id = avatar_id if avatar_id is not None else random.randint(1, 10)
 
     def deposit(self, amount):
         """

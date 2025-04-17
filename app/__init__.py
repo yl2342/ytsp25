@@ -9,6 +9,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_bcrypt import Bcrypt
+from flask_cas import CAS
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -19,6 +20,7 @@ db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
 bcrypt = Bcrypt()
+cas = CAS()
 
 def create_app(config_class=None):
     """
@@ -36,6 +38,11 @@ def create_app(config_class=None):
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-key-for-testing')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///ytsp.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Disable to improve performance
+    
+    # Basic CAS configuration - use simpler, minimal config
+    app.config['CAS_SERVER'] = 'https://secure6.its.yale.edu/cas'
+    app.config['CAS_AFTER_LOGIN'] = 'main.dashboard'
+    app.config['CAS_VALIDATE_CERT'] = False  # Set to True in production
     
     # Initialize extensions with the app
     db.init_app(app)
@@ -69,5 +76,8 @@ def create_app(config_class=None):
     # Create database tables when app is created
     with app.app_context():
         db.create_all()
+        
+    # Initialize CAS after blueprints are registered
+    cas.init_app(app)
     
     return app 

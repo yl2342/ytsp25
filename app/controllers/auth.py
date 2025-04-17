@@ -1,13 +1,14 @@
 """
 Authentication controllers for the Yale Trading Simulation Platform.
-Handles user registration, login, logout, and account management.
+Handles user authentication and account management through Yale CAS integration.
 """
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session
 from flask_login import login_user, logout_user, current_user, login_required
-from app import db, bcrypt
+from flask_cas import login as cas_login, logout as cas_logout
+from app import db, cas, login_manager
 from app.models.user import User
 from app.models.stock import CashTransaction
-from app.forms import RegistrationForm, LoginForm, FundDepositForm, FundWithdrawalForm
+from app.forms import CasRegistrationForm, FundDepositForm, FundWithdrawalForm
 from datetime import datetime
 import zoneinfo
 
@@ -17,64 +18,98 @@ auth_bp = Blueprint('auth', __name__)
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     """
-    Handle user registration.
-    GET: Display registration form
-    POST: Process registration form submission
+    Handle pre-CAS user registration.
+    Collects user information before redirecting to CAS.
     """
     if current_user.is_authenticated:
         return redirect(url_for('main.dashboard'))
     
-    form = RegistrationForm()
+    # Get the NetID if user has already authenticated through CAS
+    authenticated_netid = session.get('pending_netid', '')
+    
+    form = CasRegistrationForm()
+    
+    # Pre-fill the form with the NetID if available
+    if request.method == 'GET' and authenticated_netid:
+        form.net_id.data = authenticated_netid
+    
     if form.validate_on_submit():
+        # Create user with the registration data
         user = User(
             net_id=form.net_id.data,
-            password=form.password.data,  # This will be hashed in the __init__ method
             first_name=form.first_name.data,
-            last_name=form.last_name.data
+            last_name=form.last_name.data,
+            avatar_id=int(form.avatar_id.data)
         )
         db.session.add(user)
         db.session.commit()
         
-        flash('Your account has been created! You can now log in.', 'success')
-        return redirect(url_for('auth.login'))
-    
-    return render_template('auth/register.html', title='Register', form=form)
-
-
-@auth_bp.route('/login', methods=['GET', 'POST'])
-def login():
-    """
-    Handle user login.
-    GET: Display login form
-    POST: Process login form submission and authenticate user
-    """
-    if current_user.is_authenticated:
-        return redirect(url_for('main.dashboard'))
-    
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(net_id=form.net_id.data).first()
-        
-        if user and user.check_password(form.password.data):
-            # Update the last login timestamp
-            user.last_login_edt = datetime.now(zoneinfo.ZoneInfo("America/New_York"))
-            db.session.commit()
+        # Clear pending_netid from session since it's now registered
+        if 'pending_netid' in session:
+            session.pop('pending_netid')
             
-            login_user(user, remember=form.remember.data)
-            next_page = request.args.get('next')
-            return redirect(next_page) if next_page else redirect(url_for('main.dashboard'))
+        # If user has authenticated through CAS, log them in directly
+        if 'CAS_USERNAME' in session and session['CAS_USERNAME'] == user.net_id:
+            login_user(user)
+            flash('Your account has been created! Welcome to the Yale Trading Simulation Platform.', 'success')
+            return redirect(url_for('main.dashboard'))
         else:
-            flash('Login failed. Please check your Net ID and password.', 'danger')
+            # Otherwise, store registration data in session and redirect to CAS
+            flash('Registration successful! Please log in with Yale CAS.', 'success')
+            return redirect(url_for('auth.login'))
     
-    return render_template('auth/login.html', title='Login', form=form)
+    return render_template('auth/register.html', title='Register', form=form, authenticated_netid=authenticated_netid)
 
+@auth_bp.route('/login')
+def login():
+    """Redirect to CAS login"""
+    return cas_login()
 
 @auth_bp.route('/logout')
 def logout():
     """Log the user out and redirect to home page"""
+    # First log out from Flask-Login
     logout_user()
+    
+    # Clear any CAS session data
+    for key in list(session.keys()):
+        if key.startswith('CAS_'):
+            session.pop(key)
+    
+    flash('You have been logged out successfully.', 'info')
     return redirect(url_for('main.home'))
 
+# Let Flask-CAS handle the callback automatically
+# We'll add this user initialization function that runs on each request
+@auth_bp.before_app_request
+def check_cas_login():
+    """
+    Check if user is authenticated through CAS and create/update user if needed.
+    Runs on each request.
+    """
+    # First check if we have CAS data but no user
+    if not current_user.is_authenticated and 'CAS_USERNAME' in session:
+        net_id = session['CAS_USERNAME']
+        
+        # Check if user exists
+        user = User.query.filter_by(net_id=net_id).first()
+        
+        # If the user doesn't exist, redirect to registration page
+        if user is None:
+            # Only redirect if not already on register page to avoid loops
+            if request.endpoint != 'auth.register' and '/static/' not in request.path:
+                # Store the NetID in session for pre-filling registration form
+                session['pending_netid'] = net_id
+                flash(f'No account found for NetID: {net_id}. Please complete registration to create an YTSP account first.', 'warning')
+                return redirect(url_for('auth.register'))
+            return None  # Continue with the request if already on register page
+        
+        # User exists, update the login timestamp and log them in
+        user.last_login_edt = datetime.now(zoneinfo.ZoneInfo("America/New_York"))
+        db.session.commit()
+        
+        # Log user in with Flask-Login
+        login_user(user)
 
 @auth_bp.route('/profile', methods=['GET'])
 @login_required
@@ -138,4 +173,12 @@ def withdraw_funds():
         else:
             flash('Invalid amount for withdrawal or insufficient funds.', 'danger')
     
-    return render_template('auth/withdraw.html', title='Withdraw Funds', form=form) 
+    return render_template('auth/withdraw.html', title='Withdraw Funds', form=form)
+
+@auth_bp.route('/clear-session')
+def clear_session():
+    """Clear all session data for troubleshooting or after database resets"""
+    # Clear all session data
+    session.clear()
+    flash('All session data has been cleared. You can now register with your NetID again.', 'success')
+    return redirect(url_for('main.home')) 

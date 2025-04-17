@@ -1,20 +1,76 @@
 {% extends "layout.html" %}
 
+{% block extra_css %}
+<style>
+    .avatar-selection {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .avatar-option {
+        position: relative;
+        width: 70px;
+        height: 70px;
+        margin-bottom: 10px;
+    }
+    
+    .avatar-option input {
+        position: absolute;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+    
+    .avatar-option label {
+        display: block;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+        border: 3px solid transparent;
+        border-radius: 50%;
+        overflow: hidden;
+        transition: all 0.2s;
+    }
+    
+    .avatar-option img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+    
+    .avatar-option input:checked + label {
+        border-color: #0d6efd;
+        transform: scale(1.05);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8 col-lg-6">
             <div class="card shadow">
                 <div class="card-header bg-primary text-white">
-                    <h3 class="mb-0"><i class="fas fa-user-plus me-2"></i>Create an Account</h3>
+                    <h3 class="mb-0"><i class="fas fa-user-plus me-2"></i>Create Your Account</h3>
                 </div>
                 <div class="card-body">
-                    <!-- 
-                    The 'form' variable is an instance of the RegistrationForm class from app/forms.py
-                    It's passed to this template from the register route in the auth blueprint
-                    The form contains fields for student_id,first_name, last_name, 
-                    password, confirm_password, and a submit button
-                    -->
+                    {% if authenticated_netid %}
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Your Yale NetID <strong>{{ authenticated_netid }}</strong> has been authenticated. 
+                        Please complete your profile information below to create your account.
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-4">
+                        Please provide your details below. After registering, you'll be redirected to Yale's CAS 
+                        to verify your Yale credentials.
+                    </p>
+                    {% endif %}
+                    
                     <form method="POST" action="">
                         {{ form.hidden_tag() }}
                         
@@ -28,65 +84,65 @@
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                {{ form.net_id(class="form-control", placeholder="Enter your Yale Net ID") }}
+                                {% if authenticated_netid %}
+                                    {{ form.net_id(class="form-control", readonly=true) }}
+                                {% else %}
+                                    {{ form.net_id(class="form-control", placeholder="Enter your Yale Net ID") }}
+                                {% endif %}
                             {% endif %}
-                        </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                {{ form.first_name.label(class="form-label") }}
-                                {% if form.first_name.errors %}
-                                    {{ form.first_name(class="form-control is-invalid") }}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.first_name.errors %}
-                                            <span>{{ error }}</span>
-                                        {% endfor %}
-                                    </div>
-                                {% else %}
-                                    {{ form.first_name(class="form-control", placeholder="First name") }}
-                                {% endif %}
-                            </div>
-                            <div class="col-md-6">
-                                {{ form.last_name.label(class="form-label") }}
-                                {% if form.last_name.errors %}
-                                    {{ form.last_name(class="form-control is-invalid") }}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.last_name.errors %}
-                                            <span>{{ error }}</span>
-                                        {% endfor %}
-                                    </div>
-                                {% else %}
-                                    {{ form.last_name(class="form-control", placeholder="Last name") }}
-                                {% endif %}
-                            </div>
+                            <div class="form-text">Your Yale Net ID without @yale.edu</div>
                         </div>
                         
                         <div class="mb-3">
-                            {{ form.password.label(class="form-label") }}
-                            {% if form.password.errors %}
-                                {{ form.password(class="form-control is-invalid") }}
+                            {{ form.first_name.label(class="form-label") }}
+                            {% if form.first_name.errors %}
+                                {{ form.first_name(class="form-control is-invalid") }}
                                 <div class="invalid-feedback">
-                                    {% for error in form.password.errors %}
+                                    {% for error in form.first_name.errors %}
                                         <span>{{ error }}</span>
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                {{ form.password(class="form-control", placeholder="Choose a secure password") }}
+                                {{ form.first_name(class="form-control", placeholder="Enter your first name") }}
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.last_name.label(class="form-label") }}
+                            {% if form.last_name.errors %}
+                                {{ form.last_name(class="form-control is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.last_name.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.last_name(class="form-control", placeholder="Enter your last name") }}
                             {% endif %}
                         </div>
                         
                         <div class="mb-4">
-                            {{ form.confirm_password.label(class="form-label") }}
-                            {% if form.confirm_password.errors %}
-                                {{ form.confirm_password(class="form-control is-invalid") }}
-                                <div class="invalid-feedback">
-                                    {% for error in form.confirm_password.errors %}
+                            <label class="form-label">{{ form.avatar_id.label }}</label>
+                            
+                            {% if form.avatar_id.errors %}
+                                <div class="invalid-feedback d-block mb-2">
+                                    {% for error in form.avatar_id.errors %}
                                         <span>{{ error }}</span>
                                     {% endfor %}
                                 </div>
-                            {% else %}
-                                {{ form.confirm_password(class="form-control", placeholder="Confirm your password") }}
                             {% endif %}
+                            
+                            <div class="avatar-selection">
+                                {% for subfield in form.avatar_id %}
+                                    <div class="avatar-option">
+                                        {{ subfield }}
+                                        <label for="{{ subfield.id }}">
+                                            <img src="{{ url_for('static', filename='img/avatars/avatar' + subfield.data + '.png') }}" 
+                                                 alt="Avatar {{ subfield.data }}">
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </div>
                         </div>
                         
                         <div class="d-grid">
@@ -95,7 +151,7 @@
                     </form>
                 </div>
                 <div class="card-footer text-center">
-                    <p class="mb-0">Already have an account? <a href="{{ url_for('auth.login') }}">Log In</a></p>
+                    <p class="mb-0">Already have an account? <a href="{{ url_for('auth.login') }}">Sign In</a></p>
                 </div>
             </div>
         </div>

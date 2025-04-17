@@ -6,52 +6,27 @@
         <div class="col-md-8 col-lg-6">
             <div class="card shadow">
                 <div class="card-header bg-primary text-white">
-                    <h3 class="mb-0"><i class="fas fa-sign-in-alt me-2"></i>Login</h3>
+                    <h3 class="mb-0"><i class="fas fa-sign-in-alt me-2"></i>Yale Login</h3>
                 </div>
-                <div class="card-body">
-                    <form method="POST" action="">
-                        {{ form.hidden_tag() }}
-                        
-                        <div class="mb-3">
-                            {{ form.net_id.label(class="form-label") }}
-                            {% if form.net_id.errors %}
-                                {{ form.net_id(class="form-control is-invalid") }}
-                                <div class="invalid-feedback">
-                                    {% for error in form.net_id.errors %}
-                                        <span>{{ error }}</span>
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                                {{ form.net_id(class="form-control", placeholder="Enter your Yale student ID") }}
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-3">
-                            {{ form.password.label(class="form-label") }}
-                            {% if form.password.errors %}
-                                {{ form.password(class="form-control is-invalid") }}
-                                <div class="invalid-feedback">
-                                    {% for error in form.password.errors %}
-                                        <span>{{ error }}</span>
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                                {{ form.password(class="form-control", placeholder="Enter your password") }}
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-4 form-check">
-                            {{ form.remember(class="form-check-input") }}
-                            {{ form.remember.label(class="form-check-label") }}
-                        </div>
-                        
-                        <div class="d-grid">
-                            {{ form.submit(class="btn btn-primary btn-lg") }}
-                        </div>
-                    </form>
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <img src="{{ url_for('static', filename='img/yale-logo.png') }}" alt="Yale Logo" style="max-width: 150px;" class="mb-3">
+                        <p class="lead">Sign in with your Yale University credentials</p>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-sign-in-alt me-2"></i>Yale CAS Login
+                        </a>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <small class="text-muted">This application uses Yale's Central Authentication Service for secure login.</small>
+                    </div>
                 </div>
                 <div class="card-footer text-center">
-                    <p class="mb-0">Don't have an account? <a href="{{ url_for('auth.register') }}">Sign Up</a></p>
+                    <p class="mb-0">Trouble logging in? Contact <a href="mailto:support@yale.edu">Yale IT Support</a></p>
+                    <p class="mb-0 mt-2"><small><a href="{{ url_for('auth.clear_session') }}">Reset your session data</a> (if you need to re-register)</small></p>
                 </div>
             </div>
         </div>
