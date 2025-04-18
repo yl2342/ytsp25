@@ -17,7 +17,7 @@ class CasRegistrationForm(FlaskForm):
     net_id = StringField('Yale Net ID', validators=[DataRequired(), Length(min=2, max=20)])
     first_name = StringField('First Name', validators=[DataRequired(), Length(min=2, max=50)])
     last_name = StringField('Last Name', validators=[DataRequired(), Length(min=2, max=50)])
-    avatar_id = RadioField('Choose Your Avatar', choices=[(str(i), f'Avatar {i}') for i in range(1, 11)], 
+    avatar_id = RadioField('Choose Your Avatar', choices=[(str(i), f'Avatar {i}') for i in range(1, 10)], 
                           validators=[DataRequired()], default='1')
     submit = SubmitField('Proceed to Yale Login')
 

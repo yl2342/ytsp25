@@ -8,16 +8,16 @@ A Robinhood-like full-stack web application for Yale students to simulate stock 
 
 ## Project Status
 
-**Current Version: Alpha Version**
+**Current Version: Beta Version**
 
-This is the alpha version of the platform with core trading functionality. The application is fully functional with user authentication, trading capabilities, portfolio management, and augmented social features.
+This is the beta version of the platform with core trading functionality. The application is fully functional with user authentication, trading capabilities, portfolio management, and augmented social features.
 
 ### Roadmap
 
 * **March 28 2024**: MVP Release with core trading, portfolio management, and social features ✅
 * **April 9**: Alpha Version: Enhanced UI/UX and expanded community feature (like/dislike posts) ✅
-* **April 18 2024**: Beta Version: Add AI-Assisted Trading Advice integration and enhanced analytics
-* **May 3 2024**: Final Version: Finalize UI/UX design, comprehensive testing, documentation, and deployment
+* **April 18 2024**: Beta Version: Implement Yale CAS authentication, polish UI/UX with avator added, add enhanced interactive price trend chart over different time intervals ✅
+* **May 3 2024**: Final Version:  Add AI-Assisted Trading Advice integration, finalize UI/UX design, comprehensive testing, documentation, and deployment
 
 ---
 
@@ -39,7 +39,7 @@ This is the alpha version of the platform with core trading functionality. The a
 ## Features
 
 ### User Management
-- **Authentication**: Secure registration and login system with Yale NetID
+- **Authentication**: Secure registration and login system using Yale netid and Yale CAS
 - **Profile Management**: Customize your trading profile and privacy settings
 - **Fund Management**: Deposit and withdraw simulated funds with transaction history
 
@@ -66,15 +66,12 @@ This is the alpha version of the platform with core trading functionality. The a
 ## Upcoming Features
 
 ### Expanded social features
-- **Shares/Reposts**: Share trading posts from other users
-- **Replies**: Reply to trading posts from other users
-- **Leaderboards**: Compare performance with peers
-
+- **Leaderboards**: Compare performance with peers with more valuable metrics
 
 ### AI-Assisted Trading Advice
-In future iterations, we will integrate large language models (LLMs) to provide AI-assisted trading insights:
-
-- **Smart Trade Analysis**: AI evaluation of potential trades based on market conditions, historical data, and your portfolio composition
+In then next iterations (Final release), we will integrate large language models (LLMs) to provide AI-assisted trading insights
+- **Model**: Free tier of Gemini 2.5 flash 
+- **AI-Assisted Trading**: AI evaluation of potential trades based on market conditions, historical data, and your portfolio composition
 - **Risk Assessment**: Intelligent risk analysis for each transaction with personalized recommendations
 - **Market Insights**: AI-generated explanations of market trends and events in plain language
 - **Learning System**: Trading advice that improves over time based on your preferences and trading history

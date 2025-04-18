@@ -25,8 +25,8 @@ class User(db.Model, UserMixin):
     net_id = db.Column(db.String(20), unique=True, nullable=False)
     first_name = db.Column(db.String(50), nullable=True)
     last_name = db.Column(db.String(50), nullable=True)
-    balance = db.Column(db.Float, default=0.0)
-    avatar_id = db.Column(db.Integer, default=0) # 0 for default, 1-10 for other avatars
+    balance = db.Column(db.Float, default=1000.0)
+    avatar_id = db.Column(db.Integer, default=0) # 0 for default, 1-9 for other avatars
     created_at_edt = db.Column(db.DateTime, default=datetime.now(zoneinfo.ZoneInfo("America/New_York")))
     last_login_edt = db.Column(db.DateTime, default=datetime.now(zoneinfo.ZoneInfo("America/New_York")))
     is_active = db.Column(db.Boolean, default=True)
@@ -60,7 +60,7 @@ class User(db.Model, UserMixin):
         self.first_name = first_name
         self.last_name = last_name
         # Use provided avatar_id or randomly assign one
-        self.avatar_id = avatar_id if avatar_id is not None else random.randint(1, 10)
+        self.avatar_id = avatar_id if avatar_id is not None else random.randint(1, 9)
 
     def deposit(self, amount):
         """
