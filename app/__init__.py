@@ -66,12 +66,14 @@ def create_app(config_class=None):
     from app.controllers.trading import trading_bp
     from app.controllers.social import social_bp
     from app.api.stock_api import stock_api_bp
+    from app.api.user_api import user_api_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(trading_bp)
     app.register_blueprint(social_bp)
     app.register_blueprint(stock_api_bp, url_prefix='/api')
+    app.register_blueprint(user_api_bp, url_prefix='/api')
     
     # Create database tables when app is created
     with app.app_context():
