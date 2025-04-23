@@ -4,9 +4,30 @@ A Robinhood-like full-stack web application for Yale students to simulate stock 
 
 --- 
 <div align="center">
-  <img src="app/static/img/main_demo1.png" alt="Yale Trading Platform - by chatgpt" width="48%" style="height: auto;" />
-  <img src="app/static/img/main_demo2.png" alt="Yale Trading Platform - by chatgpt" width="48%" style="height: auto;" />
+  <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+    <div style="width: 48%;">
+      <img src="app/static/img/main_demo1.png" alt="Yale Trading Platform - Main Page" width="100%" style="height: auto;" />
+      <p><strong>Yale Trading Platform - Main Page</strong></p>
+    </div>
+    <div style="width: 48%;">
+      <img src="app/static/img/main_demo2.png" alt="Yale Trading Platform - Stock Details" width="100%" style="height: auto;" />
+      <p><strong>Yale Trading Platform - Stock Details</strong></p>
+    </div>
+  </div>
+  
+  <div style="display: flex; justify-content: space-between;">
+    <div style="width: 48%;">
+      <img src="app/static/img/main_demo3.png" alt="Yale Trading Platform - AI Assist Trading" width="100%" style="height: auto;" />
+      <p><strong>Yale Trading Platform - AI Assist Trading</strong></p>
+    </div>
+    <div style="width: 48%;">
+      <img src="app/static/img/main_demo4.png" alt="Yale Trading Platform - Social" width="100%" style="height: auto;" />
+      <p><strong>Yale Trading Platform - Social</strong></p>
+    </div>
+  </div>
 </div>
+
+--- 
 
 ## Project Status
 
