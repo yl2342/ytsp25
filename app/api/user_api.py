@@ -5,6 +5,7 @@ Provides routes for retrieving user information, transactions, and portfolio dat
 from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
 from app.models.stock import Transaction
+from app.utils.trading_utils import get_portfolio_summary
 import logging
 
 # Set up logging
@@ -54,4 +55,28 @@ def get_recent_transactions():
         return jsonify({
             'success': False,
             'message': "An error occurred while fetching your transactions."
+        }), 500 
+
+@user_api_bp.route('/portfolio/summary', methods=['GET'])
+@login_required
+def get_portfolio_data():
+    """
+    Get the user's portfolio summary data.
+    
+    Returns:
+        JSON response with the user's portfolio summary
+    """
+    try:
+        portfolio_summary = get_portfolio_summary(current_user)
+        
+        return jsonify({
+            'success': True,
+            'portfolio': portfolio_summary
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching portfolio summary: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': "An error occurred while fetching your portfolio data."
         }), 500 

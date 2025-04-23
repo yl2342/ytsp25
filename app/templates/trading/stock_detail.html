@@ -873,43 +873,155 @@ The current stock information:
 
 I'm considering a ${currentAction.toUpperCase()} order of ${currentQuantity} shares.
 
-Here is my transaction history:
-
 `;
                             
-                            // First, add a summary
-                            const totalBuys = transactions.filter(t => t.transaction_type === 'buy').length;
-                            const totalSells = transactions.filter(t => t.transaction_type === 'sell').length;
-                            
-                            prompt += 'TRANSACTION SUMMARY:\n';
-                            prompt += `Total transactions: ${transactions.length}\n`;
-                            prompt += `Buy transactions: ${totalBuys}\n`;
-                            prompt += `Sell transactions: ${totalSells}\n\n`;
-                            
-                            // Then add transaction details grouped by ticker
-                            prompt += 'TRANSACTION HISTORY BY STOCK:\n\n';
-                            
-                            Object.keys(tickerGroups).forEach(ticker => {
-                                const tickerTransactions = tickerGroups[ticker];
-                                
-                                prompt += `${ticker} - ${tickerTransactions.length} transactions\n`;
-                                prompt += '----------------\n';
-                                
-                                tickerTransactions.forEach((transaction, index) => {
-                                    const date = new Date(transaction.timestamp);
-                                    const formattedDate = date.toLocaleDateString() + ' ' + 
-                                                        date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                            // Fetch portfolio data
+                            fetch('/api/portfolio/summary')
+                                .then(response => {
+                                    if (!response.ok) {
+                                        throw new Error(`HTTP error! status: ${response.status}`);
+                                    }
+                                    return response.json();
+                                })
+                                .then(portfolioData => {
+                                    if (portfolioData.success && portfolioData.portfolio) {
+                                        const portfolio = portfolioData.portfolio;
+                                        
+                                        // Add portfolio information to the prompt
+                                        prompt += `My current portfolio summary:
+- Cash Balance: $${parseFloat(portfolio.cash_balance).toFixed(2)}
+- Portfolio Value: $${parseFloat(portfolio.portfolio_value).toFixed(2)}
+- Total Account Value: $${parseFloat(portfolio.total_account_value).toFixed(2)}
+- Total Profit/Loss: ${portfolio.total_profit_loss >= 0 ? '+' : ''}$${parseFloat(Math.abs(portfolio.total_profit_loss)).toFixed(2)} (${portfolio.total_profit_loss_percent >= 0 ? '+' : ''}${parseFloat(portfolio.total_profit_loss_percent).toFixed(2)}%)
+
+Current Holdings:
+`;
+                                        
+                                        if (portfolio.holdings && portfolio.holdings.length > 0) {
+                                            portfolio.holdings.forEach(holding => {
+                                                const profitLoss = parseFloat(holding.profit);
+                                                const profitLossPercent = parseFloat(holding.profit_percent);
+                                                
+                                                prompt += `- ${holding.ticker} (${holding.company_name}): ${holding.quantity} shares @ $${parseFloat(holding.average_price).toFixed(2)}, Current Price: $${parseFloat(holding.current_price).toFixed(2)}, Market Value: $${parseFloat(holding.market_value).toFixed(2)}, P/L: ${profitLoss >= 0 ? '+' : ''}$${Math.abs(profitLoss).toFixed(2)} (${profitLossPercent >= 0 ? '+' : ''}${profitLossPercent.toFixed(2)}%)\n`;
+                                            });
+                                        } else {
+                                            prompt += `- No current holdings\n`;
+                                        }
+                                        
+                                        prompt += `\n`;
+                                    }
                                     
-                                    const action = transaction.transaction_type === 'buy' ? 'Bought' : 'Sold';
+                                    // Now continue with transaction history
+                                    prompt += `Here is my transaction history:\n\n`;
                                     
-                                    prompt += `${action} ${transaction.quantity} shares at $${parseFloat(transaction.price).toFixed(2)} per share (Total: $${parseFloat(transaction.total_amount).toFixed(2)}) on ${formattedDate}\n`;
-                                });
-                                
-                                prompt += '\n';
-                            });
-                            
-                            // Add instructions for the AI
-                            prompt += `Please do a search on the internet for the recent relevant news to get a better understanding about the stock and the current overall market.
+                                    // First, add a summary
+                                    const totalBuys = transactions.filter(t => t.transaction_type === 'buy').length;
+                                    const totalSells = transactions.filter(t => t.transaction_type === 'sell').length;
+                                    
+                                    prompt += 'TRANSACTION SUMMARY:\n';
+                                    prompt += `Total transactions: ${transactions.length}\n`;
+                                    prompt += `Buy transactions: ${totalBuys}\n`;
+                                    prompt += `Sell transactions: ${totalSells}\n\n`;
+                                    
+                                    // Then add transaction details grouped by ticker
+                                    prompt += 'TRANSACTION HISTORY BY STOCK:\n\n';
+                                    
+                                    Object.keys(tickerGroups).forEach(ticker => {
+                                        const tickerTransactions = tickerGroups[ticker];
+                                        
+                                        prompt += `${ticker} - ${tickerTransactions.length} transactions\n`;
+                                        prompt += '----------------\n';
+                                        
+                                        tickerTransactions.forEach((transaction, index) => {
+                                            const date = new Date(transaction.timestamp);
+                                            const formattedDate = date.toLocaleDateString() + ' ' + 
+                                                                date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                                            
+                                            const action = transaction.transaction_type === 'buy' ? 'Bought' : 'Sold';
+                                            
+                                            prompt += `${action} ${transaction.quantity} shares at $${parseFloat(transaction.price).toFixed(2)} per share (Total: $${parseFloat(transaction.total_amount).toFixed(2)}) on ${formattedDate}\n`;
+                                        });
+                                        
+                                        prompt += '\n';
+                                    });
+                                    
+                                    // Add instructions for the AI
+                                    prompt += `Please do a search on the internet for the recent relevant news to get a better understanding about the stock and the current overall market.
+Then based on my personal portfolio, transaction history, the current stock information, and relevant news, market situation and trends,
+make a recommendation for my proposed ${currentAction.toUpperCase()} order of ${currentQuantity} shares of {{ stock.ticker }}.
+Specifically, please provide:
+1. An analysis of my trading patterns, preferences, and portfolio diversification
+2. A specific recommendation for my proposed ${currentAction.toUpperCase()} order of ${currentQuantity} shares of {{ stock.ticker }} considering my current holdings and cash balance
+3. Alternative trading strategies I could consider
+4. Any potential risks or opportunities to be aware of.  `;
+                                    
+                                    // Show prompt content
+                                    transactionsPromptContent.textContent = prompt;
+                                    
+                                    // Set up copy to clipboard button
+                                    const copyPromptBtn = document.getElementById('copyPromptBtn');
+                                    if (copyPromptBtn) {
+                                        copyPromptBtn.addEventListener('click', function() {
+                                            // Get the current content of the editable prompt area
+                                            const currentPromptText = transactionsPromptContent.textContent;
+                                            
+                                            navigator.clipboard.writeText(currentPromptText).then(
+                                                function() {
+                                                    // Success
+                                                    const originalText = copyPromptBtn.innerHTML;
+                                                    copyPromptBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Copied!';
+                                                    setTimeout(function() {
+                                                        copyPromptBtn.innerHTML = originalText;
+                                                    }, 2000);
+                                                },
+                                                function() {
+                                                    // Error
+                                                    console.error('Failed to copy text to clipboard');
+                                                    alert('Failed to copy text to clipboard');
+                                                }
+                                            );
+                                        });
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error fetching portfolio data:', error);
+                                    
+                                    // Continue with transaction history without portfolio data
+                                    prompt += `Here is my transaction history:\n\n`;
+                                    
+                                    // First, add a summary
+                                    const totalBuys = transactions.filter(t => t.transaction_type === 'buy').length;
+                                    const totalSells = transactions.filter(t => t.transaction_type === 'sell').length;
+                                    
+                                    prompt += 'TRANSACTION SUMMARY:\n';
+                                    prompt += `Total transactions: ${transactions.length}\n`;
+                                    prompt += `Buy transactions: ${totalBuys}\n`;
+                                    prompt += `Sell transactions: ${totalSells}\n\n`;
+                                    
+                                    // Then add transaction details grouped by ticker
+                                    prompt += 'TRANSACTION HISTORY BY STOCK:\n\n';
+                                    
+                                    Object.keys(tickerGroups).forEach(ticker => {
+                                        const tickerTransactions = tickerGroups[ticker];
+                                        
+                                        prompt += `${ticker} - ${tickerTransactions.length} transactions\n`;
+                                        prompt += '----------------\n';
+                                        
+                                        tickerTransactions.forEach((transaction, index) => {
+                                            const date = new Date(transaction.timestamp);
+                                            const formattedDate = date.toLocaleDateString() + ' ' + 
+                                                                date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                                            
+                                            const action = transaction.transaction_type === 'buy' ? 'Bought' : 'Sold';
+                                            
+                                            prompt += `${action} ${transaction.quantity} shares at $${parseFloat(transaction.price).toFixed(2)} per share (Total: $${parseFloat(transaction.total_amount).toFixed(2)}) on ${formattedDate}\n`;
+                                        });
+                                        
+                                        prompt += '\n';
+                                    });
+                                    
+                                    // Add instructions for the AI
+                                    prompt += `Please do a search on the internet for the recent relevant news to get a better understanding about the stock and the current overall market.
 Then based on my personal transaction history, the current stock information, and relevant news, market situation and trends,
 make a recommendation for my proposed ${currentAction.toUpperCase()} order of ${currentQuantity} shares of {{ stock.ticker }}.
 Specifically, please provide:
@@ -917,34 +1029,35 @@ Specifically, please provide:
 2. A specific recommendation for my proposed ${currentAction.toUpperCase()} order of ${currentQuantity} shares of {{ stock.ticker }}
 3. Alternative trading strategies I could consider
 4. Any potential risks or opportunities to be aware of.  `;
-                            
-                            // Show prompt content
-                            transactionsPromptContent.textContent = prompt;
-                            
-                            // Set up copy to clipboard button
-                            const copyPromptBtn = document.getElementById('copyPromptBtn');
-                            if (copyPromptBtn) {
-                                copyPromptBtn.addEventListener('click', function() {
-                                    // Get the current content of the editable prompt area
-                                    const currentPromptText = transactionsPromptContent.textContent;
                                     
-                                    navigator.clipboard.writeText(currentPromptText).then(
-                                        function() {
-                                            // Success
-                                            const originalText = copyPromptBtn.innerHTML;
-                                            copyPromptBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Copied!';
-                                            setTimeout(function() {
-                                                copyPromptBtn.innerHTML = originalText;
-                                            }, 2000);
-                                        },
-                                        function() {
-                                            // Error
-                                            console.error('Failed to copy text to clipboard');
-                                            alert('Failed to copy text to clipboard');
-                                        }
-                                    );
+                                    // Show prompt content
+                                    transactionsPromptContent.textContent = prompt;
+                                    
+                                    // Set up copy to clipboard button
+                                    const copyPromptBtn = document.getElementById('copyPromptBtn');
+                                    if (copyPromptBtn) {
+                                        copyPromptBtn.addEventListener('click', function() {
+                                            // Get the current content of the editable prompt area
+                                            const currentPromptText = transactionsPromptContent.textContent;
+                                            
+                                            navigator.clipboard.writeText(currentPromptText).then(
+                                                function() {
+                                                    // Success
+                                                    const originalText = copyPromptBtn.innerHTML;
+                                                    copyPromptBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Copied!';
+                                                    setTimeout(function() {
+                                                        copyPromptBtn.innerHTML = originalText;
+                                                    }, 2000);
+                                                },
+                                                function() {
+                                                    // Error
+                                                    console.error('Failed to copy text to clipboard');
+                                                    alert('Failed to copy text to clipboard');
+                                                }
+                                            );
+                                        });
+                                    }
                                 });
-                            }
                         })
                         .catch(error => {
                             console.error('Error fetching transactions:', error);
