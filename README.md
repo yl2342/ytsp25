@@ -10,22 +10,22 @@ A Robinhood-like full-stack web application for Yale students to simulate stock 
 
 ## Project Status
 
-**Current Version: Beta Version**
+**Current Version: Beta Version II**
 
-This is the beta version of the platform with core trading functionality. The application is fully functional with user authentication, trading capabilities, portfolio management, and augmented social features.
+This is the beta version of the platform with core trading functionality and AI-assisted features. The application is fully functional with user authentication, trading capabilities, portfolio management, augmented social features, and AI trading advice.
 
 ### Roadmap
 
 * **March 28 2024**: MVP Release with core trading, portfolio management, and social features ✅
 * **April 9**: Alpha Version: Enhanced UI/UX and expanded community feature (like/dislike posts) ✅
 * **April 18 2024**: Beta Version: Implement Yale CAS authentication, polish UI/UX with avator added, add enhanced interactive price trend chart over different time intervals ✅
-* **May 3 2024**: Final Version:  Add AI-Assisted Trading Advice integration, finalize UI/UX design, comprehensive testing, documentation, and deployment
+* **April 23 2024**: Beta Version II : Add AI-Assisted Trading Advice integration (structured prompt for gemini-2.0-flash grounding by real-time google search)✅
+* **May 3 2024**: Final Version:  Finalize UI/UX design, comprehensive testing, documentation, and deployment
 
 ---
 
 ## Table of Contents
 - [Features](#features)
-- [Upcoming Features](#upcoming-features)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [Setup Instructions](#setup-instructions)
@@ -34,6 +34,7 @@ This is the beta version of the platform with core trading functionality. The ap
 - [Testing](#testing)
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
+- [Team](#team)
 - [License](#license)
 
 ---
@@ -42,12 +43,13 @@ This is the beta version of the platform with core trading functionality. The ap
 
 ### User Management
 - **Authentication**: Secure registration and login system using Yale netid and Yale CAS
-- **Profile Management**: Customize your trading profile and privacy settings
+- **Profile Management**: Customize your trading profile and privacy settings for your trading posts
 - **Fund Management**: Deposit and withdraw simulated funds with transaction history
 
 ### Trading Features
 - **Stock Search**: Find companies by ticker symbol (e.g., AAPL, MSFT)
 - **Real-time Data**: View current stock prices powered by Yahoo Finance API
+- **Historical Data**: View historical stock prices over different time intervals
 - **Company Information**: Access detailed company profiles, financial statistics
 - **Portfolio Management**:
   - Buy and sell stocks with (nearly) real-time pricing
@@ -63,23 +65,29 @@ This is the beta version of the platform with core trading functionality. The ap
 - **Interactive Reactions**: Like/dislike trading posts with visual feedback and counter updates
 - **Privacy Control**: Set trading activities as public or private
 
----
-
-## Upcoming Features
-
-### Expanded social features
-- **Leaderboards**: Compare performance with peers with more valuable metrics
-
 ### AI-Assisted Trading Advice
-In then next iterations (Final release), we will integrate large language models (LLMs) to provide AI-assisted trading insights
-- **Model**: Free tier of Gemini 2.5 flash 
-- **AI-Assisted Trading**: AI evaluation of potential trades based on market conditions, historical data, and your portfolio composition
-- **Risk Assessment**: Intelligent risk analysis for each transaction with personalized recommendations
-- **Market Insights**: AI-generated explanations of market trends and events in plain language
-- **Learning System**: Trading advice that improves over time based on your preferences and trading history
-- **Strategy Recommendations**: Personalized investment strategies aligned with your goals and risk tolerance
-
-This feature will leverage cutting-edge LLM reasoning models to provide contextual, personalized advice that helps users make more informed trading decisions while learning about investment principles.
+- **Personalized Analysis**: Get AI-generated advice tailored to your specific trading situation
+- **Context-Aware Recommendations**: The system analyzes your:
+  - Current holdings and portfolio composition
+  - Trading history and patterns
+  - Stock's current performance metrics
+  - Recent market trends and news
+- **Interactive Workflow**:
+  1. Click "Need AI assist for this trade?" when placing an order
+  2. Generate and review the prompt for your AI assistant (customizable)
+  3. Confirm to send the prompt to your AI assistant 
+  4. Review detailed AI trading advice response with markdown formatting
+  5. View source references used by the AI for its analysis
+  6. Choose to confirm and display the advice on your trading submission page
+- **Grounded Analysis**: Model (Gemini-2.0-Flash) uses Google Search in real-time to provide up-to-date information about:
+  - Recent stock news and developments
+  - Market conditions and trends
+  - Company-specific information
+- **Comprehensive Advice**: Receive structured guidance including:
+  - Analysis of your trading patterns and preferences
+  - Specific recommendations for your proposed trade
+  - Alternative trading strategies to consider
+  - Potential risks and opportunities
 
 ---
 
@@ -87,22 +95,24 @@ This feature will leverage cutting-edge LLM reasoning models to provide contextu
 
 ### Backend
 - **Framework**: Python Flask with Blueprints architecture
-- **Database**: SQLite (ytsp.db in the instance directory for development) / PostgreSQL (production in future iterations)
+- **Database**: SQLite (ytsp.db in the instance directory for development)
 - **ORM**: SQLAlchemy for database management
-- **Authentication**: Flask-Login with secure password handling via Flask-Bcrypt
+- **Authentication**: Flask-Login with secure password handling via Flask-Bcrypt and Yale CAS
 - **Forms**: WTForms with CSRF protection
+- **AI Integration**: Google Generative AI (Gemini) with search grounding capabilities
 
 ### Frontend
 - **Templates**: Jinja2 template engine
 - **CSS Framework**: Bootstrap 5 for responsive design
 - **JavaScript**: Vanilla JS with HTMX for dynamic content
 - **Charts**: Chart.js for financial data visualization
+- **Markdown Rendering**: Marked.js for formatting AI responses
 
 ### APIs & Services
-- **Stock Data**: Integration with Yahoo Finance (yfinance)
+- **Stock Data**: Integration with nearly-real-time Yahoo Finance API
 - **Historical Data**: Time-series financial information
 - **Company Information**: Company profiles and key statistics
-- **AI Services**: Integration with LLM providers' APIs for trading advice (planned for future releases)
+- **AI Services**: Google Gemini 2.0 Flash API with Google Search grounding
 
 ---
 
@@ -112,6 +122,9 @@ This feature will leverage cutting-edge LLM reasoning models to provide contextu
 ytsp/
 ├── app/                    # Main application package
 │   ├── api/                # API endpoints
+│   │   ├── stock_api.py    # Stock data endpoints
+│   │   ├── user_api.py     # User data endpoints
+│   │   └── ai_api.py       # AI assistance endpoints
 │   ├── controllers/        # Route handlers
 │   │   ├── auth.py         # Authentication routes
 │   │   ├── main.py         # Main site routes
@@ -127,7 +140,7 @@ ytsp/
 ├── migrations/             # Database migrations
 ├── tests/                  # Test suite
 ├── venv/                   # Virtual environment
-├── .env                    # Environment variables
+├── .env                    # Environment variables (includes GEMINI_API_KEY)
 ├── .env.example            # Example environment file
 ├── instance/               # Instance directory
 │   └── ytsp.db             # SQLite database
@@ -139,12 +152,13 @@ ytsp/
 
 ---
 
-## Setup Instructions
+## Server Setup Instructions
 
 ### Prerequisites
 - Python 3.8 or higher
 - Git
 - Internet connection for API access
+- Google Gemini API key (for AI-assisted trading features)
 
 ### Installation
 
@@ -166,9 +180,16 @@ pip install -r requirements.txt
 ```
 
 4. **Configure environment variables**
+- google gemini api key is required for AI-assisted features
+- To get the key, please visit https://aistudio.google.com/app/apikey
+- Note the rate limit for the free tier gemini-2.0-flash API call
+  - RPM (requests per minute) is 15
+  - TPM (tokens per minute) is 1,000,000
+  - RPD (requests per day) is 1,500
 ```bash
 cp .env.example .env
 # Edit .env with your configuration
+# Be sure to include your GEMINI_API_KEY for AI-assisted features
 ```
 
 5. **Initialize the database**
@@ -195,35 +216,49 @@ python run.py
 
 ---
 
-## User Guide
+## Client User Guide
 
 ### Registration and Login
 1. Navigate to the homepage
 2. Click "Register" and complete the form with your Yale credentials
-3. Log in with your credentials
+3. Log in with your credentials (you can not log in without registering first)
 
 ### Managing Your Portfolio
 1. After logging in, you'll be directed to your dashboard
-2. To add funds: Go to "Account" → "Deposit Funds"
-3. To buy stocks:
+2. New users will be granted 1,000 virtual dollars to start with
+3. To add funds: Go to "Account" → "Deposit Funds"
+4. To buy stocks:
    - Use the search bar to find a stock by ticker symbol
    - Click on the stock to view details
-   - Enter the quantity and click "Buy" (You can only buy whole shares)
-4. To sell stocks:
+   - Enter the quantity and click "Buy" (You can only trade whole shares)
+5. To sell stocks:
    - Go to "Portfolio" → "Holdings"
    - Find the stock you want to sell
    - Enter the quantity and click "Sell"
-5. To view performance:
+6. To view performance:
    - Visit your portfolio dashboard for an overview
    - Click on individual holdings for detailed performance
 
+### Using AI-Assisted Trading
+1. Search for a stock and navigate to its detail page
+2. Enter the quantity you wish to buy/sell
+3. Click the "Need AI assist for this trade?" button
+4. In the modal window, click "Generate and review your prompt first"
+5. Review the generated prompt (which includes your portfolio data and trade details)
+6. Edit the prompt if desired - it's fully customizable!
+7. Click "Confirm my prompt for AI advice" like you send your prompt to your other AI friends (eg. chatgpt)
+8. Review the AI's detailed analysis and recommendations in the new window
+9. Click "Confirm" to add the AI advice to your trading page, or "Close" to dismissss it
+10. If confirmed, the AI advice will appear on your stock detail page for reference
+11. Submit your trade if you want to proceed with the trade
+
 ### Social Features
 1. To follow other users:
-   - Search for users in the "Social" tab
+   - Search for users by their netid in the "Social" tab
    - Visit their profile and click "Follow"
 2. To share a trade:
    - Complete a buy/sell transaction
-   - Choose to make it public and add a comment
+   - Choose add a comment to your trade and make it public
 3. To engage with posts:
    - Browse the "Social Feed" to see posts from users you follow
    - Comment on posts
@@ -252,8 +287,7 @@ flask db upgrade
 
 ## Testing
 
-The MVP release has basic functionality testing implemented. Enhanced testing coverage will be added in alpha and beta releases.
-
+Comprehensive testing is currently under development. It is expected to be added in the final version.
 ---
 
 ## Troubleshooting
@@ -267,6 +301,14 @@ If stock data isn't loading:
 3. Try searching for a popular ticker (AAPL, MSFT)
 4. Check application logs for errors
 
+#### AI Feature Issues
+If the AI trading assistant isn't working:
+1. Ensure your GEMINI_API_KEY is correctly set in your .env file
+2. Check your internet connection as the AI uses Google Search for grounding
+3. Check the current rate limit of free tier gemini-2.0-flash API and see if you have reached the limit
+4. Try with a simpler prompt if context window size exceeds the model's limit
+5. Check application logs for API errors
+
 #### Database Errors
 If you encounter database issues:
 1. Ensure migrations are up to date: `flask db upgrade`
@@ -274,8 +316,8 @@ If you encounter database issues:
 
 #### Authentication Problems
 If you can't log in:
-1. Verify your credentials
-2. We do not have a password reset functionality yet. If you forgot your password, please contact the developers or sign up for a new account.
+1. Make sure you are Yale affliated and have a valid netid. (This app is not open to the public yet)
+2. Verify your credentials for Yale CAS
 
 ---
 
@@ -289,10 +331,20 @@ If you can't log in:
    
 ---
 
+## Team
+
+### Project Authors
+- Yuntian Liu, PhD student in Biomedical informatics and data science department at Yale University
+-  
+-
+- 
+
+---
+
 ## License
 
 This project is licensed under the MIT License 
 
 ---
 
-© 2024 Yale University CPSC 519 Project Team No. 24
+© 2024 Yale University CPSC 519 Project Team No. 24. All rights reserved.

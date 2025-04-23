@@ -13,6 +13,24 @@
         height: 300px;
         width: 100%;
     }
+    .ai-advice-content h1, 
+    .ai-advice-content h2, 
+    .ai-advice-content h3, 
+    .ai-advice-content h4 {
+        font-size: 1.2rem;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+    }
+
+    .ai-advice-content ul, 
+    .ai-advice-content ol {
+        padding-left: 1.5rem;
+    }
+
+    .ai-advice-content p {
+        margin-bottom: 0.75rem;
+    }
 </style>
 {% endblock %}
 
@@ -253,7 +271,7 @@
 
 <!-- AI Trading Assistant Modal -->
 <div class="modal fade" id="aiTradeAssistModal" tabindex="-1" aria-labelledby="aiTradeAssistModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-info bg-opacity-10">
                 <h5 class="modal-title" id="aiTradeAssistModalLabel">
@@ -292,7 +310,7 @@
                 <!-- Transactions Button -->
                 <div class="d-grid mb-3">
                     <button type="button" id="viewTransactionsPromptBtn" class="btn btn-outline-primary">
-                        <i class="bi bi-chat-square-text me-2"></i>View Prompt
+                        <i class="bi bi-chat-square-text me-2"></i>Generate and review your prompt first
                     </button>
                 </div>
                 
@@ -317,9 +335,47 @@
                         <small>No transactions found to generate prompt.</small>
                     </div>
                 </div>
+                
+                <!-- AI Response View (Hidden by default) -->
+                <div id="aiResponseContainer" class="mt-3" style="display: none;">
+                    <h6 class="fw-bold mb-2">AI Trading Advice</h6>
+                    <div class="d-flex justify-content-end mb-2">
+                        <button id="resetPromptBtn" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Edit Prompt
+                        </button>
+                    </div>
+                    <div id="aiResponseContent" class="p-3 bg-light border rounded" style="max-height: 400px; overflow-y: auto;">
+                        <!-- AI Response will be loaded here -->
+                    </div>
+                    <div id="aiResponseLoading" class="text-center py-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <span class="ms-2">Getting AI advice...</span>
+                    </div>
+                    <div id="aiResponseError" class="alert alert-danger mt-3" style="display: none;">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        <span id="aiResponseErrorText">Error processing AI request.</span>
+                    </div>
+                    
+                    <!-- AI Grounding Information -->
+                    <div id="aiGroundingContainer" class="mt-3" style="display: none;">
+                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#aiGroundingCollapse" aria-expanded="false" aria-controls="aiGroundingCollapse">
+                            <i class="bi bi-info-circle me-1"></i>View Sources
+                        </button>
+                        <div class="collapse mt-2" id="aiGroundingCollapse">
+                            <div class="card card-body">
+                                <small class="text-muted">AI grounding information:</small>
+                                <div id="aiGroundingContent" class="mt-2" style="max-height: 200px; overflow-y: auto; font-size: 0.8rem;">
+                                    <!-- Grounding content will go here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" id="confirmPromptBtn" class="btn btn-success me-auto">
+                <button type="button" id="confirmPromptBtn" class="btn btn-success me-auto" style="display: none;">
                     <i class="bi bi-check-circle me-1"></i>Confirm my prompt for AI advice
                 </button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -372,6 +428,91 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Response Modal -->
+<div class="modal fade" id="aiResponseModal" tabindex="-1" aria-labelledby="aiResponseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="aiResponseModalLabel">
+                    <i class="bi bi-robot me-2"></i>AI Trading Advice
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Trade Summary Card -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="fw-bold mb-0">Trade Summary</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 mb-2">
+                                <span class="text-muted">Stock:</span>
+                                <span class="fw-bold ms-2 trade-summary-stock">{{ stock.name }} ({{ stock.ticker }})</span>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <span class="text-muted">Current Price:</span>
+                                <span class="fw-bold ms-2 trade-summary-price">${{ (stock.current_price|default(0))|round(2) }}</span>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <span class="text-muted">Action:</span>
+                                <span class="fw-bold ms-2 trade-summary-action">Buy</span>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <span class="text-muted">Quantity:</span>
+                                <span class="fw-bold ms-2 trade-summary-quantity">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- AI Response Content -->
+                <div class="ai-response-rendered mb-4">
+                    <!-- AI Response will be rendered here -->
+                </div>
+                
+                <!-- AI Sources/Grounding (Collapsible) -->
+                <div class="ai-sources-section mb-3" style="display: none;">
+                    <button class="btn btn-sm btn-outline-secondary mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#aiSourcesCollapse">
+                        <i class="bi bi-info-circle me-1"></i>View Sources
+                    </button>
+                    <div class="collapse" id="aiSourcesCollapse">
+                        <div class="card">
+                            <div class="card-body">
+                                <small class="text-muted">AI research sources:</small>
+                                <div class="ai-sources-content mt-2" style="max-height: 200px; overflow-y: auto; font-size: 0.85rem;">
+                                    <!-- Sources content will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="confirmAdviceBtn" class="btn btn-success">
+                    <i class="bi bi-check-circle me-1"></i>Confirm
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Advice Summary Container (Will be shown in main page after confirmation) -->
+<div id="aiAdviceSummaryContainer" class="card border-info mb-4 mt-3" style="display: none;">
+    <div class="card-header bg-info bg-opacity-10 d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+            <i class="bi bi-robot me-2"></i>AI Trading Advice
+        </h6>
+        <button type="button" class="btn-close" aria-label="Close" id="closeAiAdviceBtn"></button>
+    </div>
+    <div class="card-body p-0">
+        <div id="aiAdviceSummaryContent" class="p-3" style="max-height: 300px; overflow-y: auto;">
+            <!-- AI advice summary will be shown here -->
         </div>
     </div>
 </div>
@@ -657,6 +798,12 @@
                     // Hide transactions table when opening modal
                     document.getElementById('transactionsTableContainer').style.display = 'none';
                     document.getElementById('transactionsPromptContainer').style.display = 'none';
+                    
+                    // Hide the confirm button when opening modal
+                    const confirmPromptBtn = document.getElementById('confirmPromptBtn');
+                    if (confirmPromptBtn) {
+                        confirmPromptBtn.style.display = 'none';
+                    }
                 });
             }
             
@@ -814,6 +961,12 @@
                         transactionsPromptEmpty.style.display = 'none';
                         transactionsPromptContent.textContent = '';
                         
+                        // Hide the confirm button while loading
+                        const confirmPromptBtn = document.getElementById('confirmPromptBtn');
+                        if (confirmPromptBtn) {
+                            confirmPromptBtn.style.display = 'none';
+                        }
+                        
                         // Fetch and display transactions prompt
                         fetchTransactions(transactions => {
                             // Hide loading indicator
@@ -958,6 +1111,11 @@ Specifically, please provide:
                                     // Show prompt content
                                     transactionsPromptContent.textContent = prompt;
                                     
+                                    // Show the confirm button now that the prompt is ready
+                                    if (confirmPromptBtn) {
+                                        confirmPromptBtn.style.display = 'block';
+                                    }
+                                    
                                     // Set up copy to clipboard button
                                     const copyPromptBtn = document.getElementById('copyPromptBtn');
                                     if (copyPromptBtn) {
@@ -1033,6 +1191,11 @@ Specifically, please provide:
                                     // Show prompt content
                                     transactionsPromptContent.textContent = prompt;
                                     
+                                    // Show the confirm button now that the prompt is ready
+                                    if (confirmPromptBtn) {
+                                        confirmPromptBtn.style.display = 'block';
+                                    }
+                                    
                                     // Set up copy to clipboard button
                                     const copyPromptBtn = document.getElementById('copyPromptBtn');
                                     if (copyPromptBtn) {
@@ -1064,15 +1227,31 @@ Specifically, please provide:
                             transactionsPromptLoading.style.display = 'none';
                             transactionsPromptEmpty.style.display = 'block';
                             transactionsPromptEmpty.textContent = 'Error loading transactions. Please try again.';
+                            
+                            // Hide confirm button if there was an error
+                            if (confirmPromptBtn) {
+                                confirmPromptBtn.style.display = 'none';
+                            }
                         })
                         .then(hasTransactions => {
                             if (!hasTransactions) {
                                 transactionsPromptEmpty.style.display = 'block';
+                                
+                                // Hide confirm button if there are no transactions
+                                if (confirmPromptBtn) {
+                                    confirmPromptBtn.style.display = 'none';
+                                }
                             }
                         });
                     } else {
                         // Hide the transactions prompt
                         transactionsPromptContainer.style.display = 'none';
+                        
+                        // Also hide the confirm button
+                        const confirmPromptBtn = document.getElementById('confirmPromptBtn');
+                        if (confirmPromptBtn) {
+                            confirmPromptBtn.style.display = 'none';
+                        }
                     }
                 });
             }
@@ -1088,26 +1267,333 @@ Specifically, please provide:
                         // Get the current content of the editable prompt area
                         const currentPromptText = transactionsPromptContent.textContent;
                         
-                        // Show confirmation alert
-                        alert('Your AI advice request has been submitted successfully! The AI is analyzing your trading history and will provide personalized advice shortly.');
+                        // Hide prompt container and show AI response elements
+                        transactionsPromptContainer.style.display = 'none';
+                        const aiResponseContainer = document.getElementById('aiResponseContainer');
+                        const aiResponseLoading = document.getElementById('aiResponseLoading');
+                        const aiResponseContent = document.getElementById('aiResponseContent');
+                        const aiResponseError = document.getElementById('aiResponseError');
+                        const aiResponseErrorText = document.getElementById('aiResponseErrorText');
+                        const aiGroundingContainer = document.getElementById('aiGroundingContainer');
+                        const aiGroundingContent = document.getElementById('aiGroundingContent');
                         
-                        // Close the modal
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('aiTradeAssistModal'));
-                        if (modal) {
-                            modal.hide();
-                        }
+                        // Show response container and loading indicator
+                        aiResponseContainer.style.display = 'block';
+                        aiResponseLoading.style.display = 'block';
+                        aiResponseContent.style.display = 'none';
+                        aiResponseError.style.display = 'none';
+                        aiGroundingContainer.style.display = 'none';
                         
-                        // Optional: Here you would typically send the prompt to your AI service
-                        // For now, we're just simulating the confirmation
-                        console.log('Sending prompt to AI service:', currentPromptText);
-                        
+                        // Send the prompt to our AI API
+                        fetch('/api/ai/advice', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                prompt: currentPromptText
+                            })
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            // Hide loading indicator
+                            aiResponseLoading.style.display = 'none';
+                            
+                            if (data.success) {
+                                // Close the AI assistant modal
+                                const aiTradeAssistModal = bootstrap.Modal.getInstance(document.getElementById('aiTradeAssistModal'));
+                                if (aiTradeAssistModal) {
+                                    aiTradeAssistModal.hide();
+                                }
+                                
+                                // Prepare the new response modal
+                                const responseModal = new bootstrap.Modal(document.getElementById('aiResponseModal'));
+                                
+                                // Update trade summary in the new modal
+                                const actionElement = document.querySelector('.trade-action');
+                                const quantityElement = document.querySelector('.trade-quantity');
+                                const totalElement = document.querySelector('.trade-total');
+                                
+                                document.querySelector('.trade-summary-action').textContent = actionElement ? actionElement.textContent : 'Buy';
+                                document.querySelector('.trade-summary-quantity').textContent = quantityElement ? quantityElement.textContent : '0';
+                                
+                                // Render the AI response with markdown
+                                const aiResponseRendered = document.querySelector('.ai-response-rendered');
+                                
+                                try {
+                                    // Check if marked library is available
+                                    if (typeof marked !== 'undefined') {
+                                        const renderer = new marked.Renderer();
+                                        
+                                        // Configure marked options for better formatting
+                                        marked.setOptions({
+                                            renderer: renderer,
+                                            gfm: true,
+                                            breaks: true,
+                                            sanitize: false,
+                                            smartLists: true
+                                        });
+                                        
+                                        // Add class to allow styling
+                                        aiResponseRendered.classList.add('ai-advice-content');
+                                        
+                                        // Render the markdown
+                                        aiResponseRendered.innerHTML = marked.parse(data.advice);
                     } else {
-                        // If prompt is not visible, show it first
-                        viewTransactionsPromptBtn.click();
-                        alert('Please review your AI prompt before confirming.');
+                                        // Improved fallback formatting
+                                        aiResponseRendered.classList.add('ai-advice-content');
+                                        const formattedText = data.advice
+                                            .replace(/\n\n/g, '</p><p>')
+                                            .replace(/\n/g, '<br>')
+                                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                                            .replace(/^# (.*?)$/gm, '<h1>$1</h1>')
+                                            .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
+                                            .replace(/^### (.*?)$/gm, '<h3>$1</h3>')
+                                            .replace(/^#### (.*?)$/gm, '<h4>$1</h4>');
+                                        aiResponseRendered.innerHTML = `<p>${formattedText}</p>`;
+                                    }
+                                } catch (error) {
+                                    console.error('Error rendering markdown:', error);
+                                    aiResponseRendered.innerHTML = `<p>${data.advice.replace(/\n/g, '<br>')}</p>`;
+                                }
+                                
+                                // Show grounding information if available
+                                const aiSourcesSection = document.querySelector('.ai-sources-section');
+                                const aiSourcesContent = document.querySelector('.ai-sources-content');
+                                
+                                if (data.grounding_metadata && data.grounding_metadata.search_results) {
+                                    aiSourcesSection.style.display = 'block';
+                                    aiSourcesContent.innerHTML = data.grounding_metadata.search_results;
+                                } else {
+                                    aiSourcesSection.style.display = 'none';
+                                }
+                                
+                                // Show the new modal
+                                responseModal.show();
+                                
+                                // Store the AI response data for use when confirming
+                                window.aiAdviceData = {
+                                    advice: data.advice,
+                                    grounding: data.grounding_metadata
+                                };
+                                
+                            } else {
+                                // Show error message in the original modal
+                                aiResponseError.style.display = 'block';
+                                aiResponseErrorText.textContent = data.error || 'Error getting AI advice';
+                            }
+                        })
+                        .catch(error => {
+                            // Hide loading indicator and show error
+                            aiResponseLoading.style.display = 'none';
+                            aiResponseError.style.display = 'block';
+                            aiResponseErrorText.textContent = error.message || 'Error connecting to AI service';
+                            console.error('Error getting AI advice:', error);
+                        });
                     }
                 });
             }
+
+            // Reset Prompt Button functionality
+            const resetPromptBtn = document.getElementById('resetPromptBtn');
+            if (resetPromptBtn) {
+                resetPromptBtn.addEventListener('click', function() {
+                    // Hide the AI response container and show the prompt container
+                    const aiResponseContainer = document.getElementById('aiResponseContainer');
+                    const transactionsPromptContainer = document.getElementById('transactionsPromptContainer');
+                    if (aiResponseContainer && transactionsPromptContainer) {
+                        aiResponseContainer.style.display = 'none';
+                        transactionsPromptContainer.style.display = 'block';
+                        
+                        // Make sure the confirm button is visible when returning to edit the prompt
+                        const confirmPromptBtn = document.getElementById('confirmPromptBtn');
+                        if (confirmPromptBtn) {
+                            confirmPromptBtn.style.display = 'block';
+                        }
+                    }
+                });
+            }
+
+            // Add event handler for the confirm advice button in the response modal
+            const confirmAdviceBtn = document.getElementById('confirmAdviceBtn');
+            if (confirmAdviceBtn) {
+                confirmAdviceBtn.addEventListener('click', function() {
+                    // Close the response modal
+                    const responseModal = bootstrap.Modal.getInstance(document.getElementById('aiResponseModal'));
+                    if (responseModal) {
+                        responseModal.hide();
+                    }
+                    
+                    // Also make sure the assistant modal is closed
+                    const aiTradeAssistModal = bootstrap.Modal.getInstance(document.getElementById('aiTradeAssistModal'));
+                    if (aiTradeAssistModal) {
+                        aiTradeAssistModal.hide();
+                    }
+                    
+                    // Show the AI advice summary in the main page
+                    const aiAdviceSummaryContainer = document.getElementById('aiAdviceSummaryContainer');
+                    const aiAdviceSummaryContent = document.getElementById('aiAdviceSummaryContent');
+                    
+                    if (aiAdviceSummaryContainer && aiAdviceSummaryContent && window.aiAdviceData) {
+                        // Position the advice container in the DOM if not already done
+                        // Get the AI assist button
+                        const aiAssistBtn = document.querySelector('[data-bs-target="#aiTradeAssistModal"]');
+                        
+                        if (aiAssistBtn && aiAssistBtn.parentNode) {
+                            // Ensure container is initially removed from DOM to avoid duplicate placement
+                            if (aiAdviceSummaryContainer.parentNode) {
+                                aiAdviceSummaryContainer.parentNode.removeChild(aiAdviceSummaryContainer);
+                            }
+                            
+                            // Insert the advice container directly after the AI assist button's parent div
+                            aiAssistBtn.parentNode.parentNode.insertBefore(
+                                aiAdviceSummaryContainer, 
+                                aiAssistBtn.parentNode.nextSibling
+                            );
+                        }
+                        
+                        // Update the summary content - use more complete extract of the advice
+                        try {
+                            let summaryText = window.aiAdviceData.advice;
+                            
+                            // Don't try to extract specific sections, just use the full advice text
+                            // This ensures we always show complete advice rather than potentially cutting it off
+                            
+                            // Add styling for better readability
+                            aiAdviceSummaryContent.style.maxHeight = '300px'; // Increased height
+                            aiAdviceSummaryContent.style.overflowY = 'auto';
+                            aiAdviceSummaryContent.style.padding = '10px';
+                            
+                            // Format using markdown if available
+                            if (typeof marked !== 'undefined') {
+                                const renderer = new marked.Renderer();
+                                
+                                // Configure marked options for better formatting
+                                marked.setOptions({
+                                    renderer: renderer,
+                                    gfm: true,
+                                    breaks: true,
+                                    sanitize: false,
+                                    smartLists: true
+                                });
+                                
+                                // Add class to allow styling
+                                aiAdviceSummaryContent.classList.add('ai-advice-content');
+                                
+                                // Render the markdown
+                                aiAdviceSummaryContent.innerHTML = marked.parse(summaryText);
+                            } else {
+                                // Improved fallback formatting
+                                aiAdviceSummaryContent.classList.add('ai-advice-content');
+                                const formattedText = summaryText
+                                    .replace(/\n\n/g, '</p><p>')
+                                    .replace(/\n/g, '<br>')
+                                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                                    .replace(/^# (.*?)$/gm, '<h1>$1</h1>')
+                                    .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
+                                    .replace(/^### (.*?)$/gm, '<h3>$1</h3>')
+                                    .replace(/^#### (.*?)$/gm, '<h4>$1</h4>');
+                                aiAdviceSummaryContent.innerHTML = `<p>${formattedText}</p>`;
+                            }
+                            
+                            // Ensure proper styling
+                            aiAdviceSummaryContainer.style.display = 'block';
+                            aiAdviceSummaryContainer.style.width = '100%';
+                            
+                            // Add click handler for close button
+                            const closeAiAdviceBtn = document.getElementById('closeAiAdviceBtn');
+                            if (closeAiAdviceBtn) {
+                                closeAiAdviceBtn.onclick = function() {
+                                    aiAdviceSummaryContainer.style.display = 'none';
+                                };
+                            }
+
+                            // Scroll to make the advice visible
+                            setTimeout(() => {
+                                aiAdviceSummaryContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }, 100);
+                        } catch (error) {
+                            console.error('Error showing AI advice summary:', error);
+                        }
+                    }
+                });
+            }
+
+            // Load the marked library for markdown rendering if not already loaded
+            if (typeof marked === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
+                script.onload = function() {
+                    console.log('Marked.js library loaded for markdown rendering');
+                };
+                script.onerror = function() {
+                    console.warn('Failed to load Marked.js library for markdown rendering');
+                };
+                document.head.appendChild(script);
+            }
+
+            // Set up event handlers more reliably using delegation
+            document.addEventListener('click', function(event) {
+                // Copy Prompt Button
+                if (event.target.matches('#copyPromptBtn') || event.target.closest('#copyPromptBtn')) {
+                    const transactionsPromptContent = document.getElementById('transactionsPromptContent');
+                    if (transactionsPromptContent) {
+                        // Get the current content of the editable prompt area
+                        const currentPromptText = transactionsPromptContent.textContent;
+                        
+                        navigator.clipboard.writeText(currentPromptText).then(
+                            function() {
+                                // Success
+                                const copyPromptBtn = document.getElementById('copyPromptBtn');
+                                if (copyPromptBtn) {
+                                    const originalText = copyPromptBtn.innerHTML;
+                                    copyPromptBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Copied!';
+                                    setTimeout(function() {
+                                        copyPromptBtn.innerHTML = originalText;
+                                    }, 2000);
+                                }
+                            },
+                            function() {
+                                // Error
+                                console.error('Failed to copy text to clipboard');
+                                alert('Failed to copy text to clipboard');
+                            }
+                        );
+                    }
+                }
+                
+                // Reset Prompt Button
+                if (event.target.matches('#resetPromptBtn') || event.target.closest('#resetPromptBtn')) {
+                    // Hide the AI response container and show the prompt container
+                    const aiResponseContainer = document.getElementById('aiResponseContainer');
+                    const transactionsPromptContainer = document.getElementById('transactionsPromptContainer');
+                    if (aiResponseContainer && transactionsPromptContainer) {
+                        aiResponseContainer.style.display = 'none';
+                        transactionsPromptContainer.style.display = 'block';
+                        
+                        // Make sure the confirm button is visible when returning to edit the prompt
+                        const confirmPromptBtn = document.getElementById('confirmPromptBtn');
+                        if (confirmPromptBtn) {
+                            confirmPromptBtn.style.display = 'block';
+                        }
+                    }
+                }
+                
+                // Close AI Advice Summary Button
+                if (event.target.matches('#closeAiAdviceBtn') || event.target.closest('#closeAiAdviceBtn')) {
+                    const aiAdviceSummaryContainer = document.getElementById('aiAdviceSummaryContainer');
+                    if (aiAdviceSummaryContainer) {
+                        aiAdviceSummaryContainer.style.display = 'none';
+                    }
+                }
+            });
         }
     });
 </script>
