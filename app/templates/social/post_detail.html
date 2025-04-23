@@ -142,56 +142,6 @@
                                             <div class="mt-2 mb-2">
                                                 {{ comment.content }}
                                             </div>
-                                            
-                                            <!-- Comment Actions -->
-                                            <div class="d-flex align-items-center">
-                                                <button class="btn btn-link btn-sm text-decoration-none p-0" 
-                                                        onclick="toggleReplyForm('{{ comment.id }}')">
-                                                    <i class="far fa-comment me-1"></i> Reply
-                                                </button>
-                                            </div>
-                                            
-                                            <!-- Reply Form (hidden by default) -->
-                                            <div class="reply-form mt-2 d-none" id="reply-form-{{ comment.id }}">
-                                                <form action="{{ url_for('social.reply_to_comment', comment_id=comment.id) }}" method="post">
-                                                    {{ reply_form.hidden_tag() }}
-                                                    <div class="input-group">
-                                                        {{ reply_form.content(class="form-control", placeholder="Write a reply...") }}
-                                                        <button type="submit" class="btn btn-primary">Reply</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                            
-                                            <!-- Replies -->
-                                            {% if comment.replies %}
-                                                <div class="replies mt-3">
-                                                    {% for reply in comment.replies %}
-                                                        <div class="reply mt-3">
-                                                            <div class="d-flex">
-                                                                <div class="flex-shrink-0">
-                                                                    <img src="{{ url_for('static', filename=reply.author.get_avatar_url()) }}" 
-                                                                         alt="{{ reply.author.first_name }}" class="rounded-circle" width="32" height="32">
-                                                                </div>
-                                                                <div class="ms-2">
-                                                                    <div class="d-flex align-items-center">
-                                                                        <h5 class="h6 mb-0">
-                                                                            <a href="{{ url_for('social.user_profile', user_id=reply.author.id) }}" class="text-decoration-none">
-                                                                                {{ reply.author.first_name }} {{ reply.author.last_name }}
-                                                                            </a>
-                                                                        </h5>
-                                                                        <small class="text-muted ms-2">
-                                                                            {{ reply.created_at.strftime('%b %d, %Y') }}
-                                                                        </small>
-                                                                    </div>
-                                                                    <div class="mt-1">
-                                                                        {{ reply.content }}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    {% endfor %}
-                                                </div>
-                                            {% endif %}
                                         </div>
                                     </div>
                                 </div>
@@ -213,15 +163,4 @@
 {% block scripts %}
 {{ super() }}
 <script src="https://unpkg.com/htmx.org@1.7.0"></script>
-<script>
-    function toggleReplyForm(commentId) {
-        const replyForm = document.getElementById(`reply-form-${commentId}`);
-        replyForm.classList.toggle('d-none');
-        
-        // Focus the input if showing the form
-        if (!replyForm.classList.contains('d-none')) {
-            replyForm.querySelector('input').focus();
-        }
-    }
-</script>
 {% endblock %} 
