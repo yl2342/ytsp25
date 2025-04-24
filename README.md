@@ -356,7 +356,7 @@ If you can't log in:
 
 ### Project Authors
 - Yuntian Liu, PhD student in Biomedical informatics and data science department at Yale University
--  
+- Karen Dorantes, Undergrad Student in Computer Science at Yale University
 -
 - 
 
