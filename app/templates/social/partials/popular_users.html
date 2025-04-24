@@ -1,0 +1,106 @@
+<!-- Popular Users Partial - Used for HTMX updates -->
+<div class="card shadow h-100" id="popular-traders-section">
+    <div class="card-header bg-primary text-white">
+        <h3 class="h4 mb-0">Popular Yale Traders</h3>
+    </div>
+    <div class="d-flex justify-content-center p-2 bg-light border-bottom">
+        <div class="btn-group btn-group-sm">
+            <a href="{{ url_for('social.search_users', sort_by='followers', net_id=request.args.get('net_id', '')) }}" 
+                class="btn btn-outline-primary {{ 'active' if sort_by == 'followers' else '' }}"
+                hx-get="{{ url_for('social.search_users', sort_by='followers', net_id=request.args.get('net_id', ''), partial=1) }}"
+                hx-target="#popular-traders-section"
+                hx-swap="outerHTML">
+                <i class="fas fa-users me-1"></i> By Followers
+            </a>
+            <a href="{{ url_for('social.search_users', sort_by='transactions', net_id=request.args.get('net_id', '')) }}" 
+                class="btn btn-outline-primary {{ 'active' if sort_by == 'transactions' else '' }}"
+                hx-get="{{ url_for('social.search_users', sort_by='transactions', net_id=request.args.get('net_id', ''), partial=1) }}"
+                hx-target="#popular-traders-section"
+                hx-swap="outerHTML">
+                <i class="fas fa-chart-line me-1"></i> By Trades
+            </a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+            {% if popular_users %}
+                {% for user in popular_users %}
+                    <div class="list-group-item py-2 px-3">
+                        <div class="row align-items-center g-2">
+                            <div class="col-auto">
+                                <img src="{{ url_for('static', filename=user.get_avatar_url()) }}" 
+                                     alt="{{ user.first_name }}" class="rounded-circle" width="45" height="45">
+                            </div>
+                            <div class="col">
+                                <div class="d-flex align-items-center">
+                                    <h4 class="h6 mb-0">
+                                        <a href="{{ url_for('social.user_profile', user_id=user.id) }}" class="text-decoration-none">
+                                            {{ user.first_name }} {{ user.last_name }}
+                                        </a>
+                                    </h4>
+                                </div>
+                                <div class="text-muted small">
+                                    {% if sort_by == 'transactions' %}
+                                        {{ user.tx_count }} trades
+                                    {% else %}
+                                        {{ user.followers.count() }} followers
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <a href="{{ url_for('social.user_profile', user_id=user.id) }}" class="btn btn-sm btn-outline-primary" style="width: 90px">
+                                    <i class="fas fa-user-plus me-1"></i> Follow
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                {% if popular_users|length < 5 %}
+                    {% for i in range(5 - popular_users|length) %}
+                        <div class="list-group-item py-2 px-3 opacity-50">
+                            <div class="row align-items-center g-2">
+                                <div class="col-auto">
+                                    <img src="{{ url_for('static', filename='img/avatars/avatar' + ((loop.index % 9) + 1)|string + '.png') }}" 
+                                         alt="User" class="rounded-circle" width="45" height="45">
+                                </div>
+                                <div class="col">
+                                    <div class="d-flex align-items-center">
+                                        <h4 class="h6 mb-0">Yale Trader</h4>
+                                    </div>
+                                    <div class="text-muted small">0 followers</div>
+                                </div>
+                                <div class="col-auto">
+                                    <button class="btn btn-sm btn-outline-primary" disabled style="width: 90px">
+                                        <i class="fas fa-user-plus me-1"></i> Follow
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% else %}
+                {% for i in range(5) %}
+                    <div class="list-group-item py-2 px-3 opacity-50">
+                        <div class="row align-items-center g-2">
+                            <div class="col-auto">
+                                <img src="{{ url_for('static', filename='img/avatars/avatar' + ((loop.index % 9) + 1)|string + '.png') }}" 
+                                     alt="User" class="rounded-circle" width="45" height="45">
+                            </div>
+                            <div class="col">
+                                <div class="d-flex align-items-center">
+                                    <h4 class="h6 mb-0">Yale Trader</h4>
+                                </div>
+                                <div class="text-muted small">0 followers</div>
+                            </div>
+                            <div class="col-auto">
+                                <button class="btn btn-sm btn-outline-primary" disabled style="width: 90px">
+                                    <i class="fas fa-user-plus me-1"></i> Follow
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div> 

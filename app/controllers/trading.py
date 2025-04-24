@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import current_user, login_required
 from app import db
 from app.forms import StockSearchForm, TradeForm
-from app.utils.stock_utils import get_stock_info, get_stock_historical_data, search_stocks, get_popular_stocks
+from app.utils.stock_utils import get_stock_info, get_stock_historical_data, search_stocks, get_trending_stocks
 from app.utils.trading_utils import execute_buy, execute_sell, get_portfolio_summary
 from app.models.stock import StockHolding, Transaction
 import logging
@@ -41,8 +41,8 @@ def stock_search():
             if not results:
                 flash(f"No stocks found matching '{ticker}'. Try another search term or ticker symbol.", "warning")
         
-        # Get popular stocks for the sidebar
-        popular_stocks = get_popular_stocks()
+        # Get trending stocks for the sidebar
+        popular_stocks = get_trending_stocks()
                 
         return render_template('trading/search.html', 
                             title='Stock Search',

@@ -6,7 +6,7 @@
         <div class="col-md-7">
             <h1 class="fw-bold mb-3">Yale Trading Simulation Platform</h1>
             <p class="lead mb-3">
-                Learn investing, build your portfolio, and connect with fellow Yale traders in a safe, simulated environment.
+                Learn investing, build your portfolio, and connect with fellow Yale traders in a safe, AI-powered, simulated environment.
             </p>
             <div class="mb-3">
                 <a href="{{ url_for('auth.register') }}" class="btn btn-primary me-2">
@@ -60,7 +60,7 @@
     </div>
 
     <div class="row mt-4">
-        <div class="col-md-4 mb-3">
+        <div class="col-md-3 mb-3">
             <div class="card h-100 shadow-sm">
                 <div class="card-body text-center py-3">
                     <i class="fas fa-chart-line fa-2x text-primary mb-2"></i>
@@ -69,7 +69,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
+        <div class="col-md-3 mb-3">
             <div class="card h-100 shadow-sm">
                 <div class="card-body text-center py-3">
                     <i class="fas fa-chart-pie fa-2x text-primary mb-2"></i>
@@ -78,12 +78,21 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
+        <div class="col-md-3 mb-3">
             <div class="card h-100 shadow-sm">
                 <div class="card-body text-center py-3">
                     <i class="fas fa-users fa-2x text-primary mb-2"></i>
                     <h5>Connect with Peers</h5>
                     <p class="mb-0">Follow other traders, share insights, and learn from the Yale trading community.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center py-3">
+                    <i class="fas fa-robot fa-2x text-primary mb-2"></i>
+                    <h5>AI Powered</h5>
+                    <p class="mb-0">Leverage AI-driven insights and recommendations to enhance your trading decisions.</p>
                 </div>
             </div>
         </div>
@@ -93,7 +102,7 @@
         <div class="col-12 text-center">
             <h4 class="mb-3">Ready to start your investment journey?</h4>
             <a href="{{ url_for('auth.register') }}" class="btn btn-primary">
-                Create Your Account
+                Register with your NetID
             </a>
         </div>
     </div>

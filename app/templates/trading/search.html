@@ -87,8 +87,11 @@
                                     <span class="fw-bold">{{ stock.ticker }}</span>
                                     <small class="text-muted d-block">{{ stock.name }}</small>
                                 </div>
-                                <div class="{% if stock.change_percent >= 0 %}text-success{% else %}text-danger{% endif %}">
-                                    {% if stock.change_percent >= 0 %}+{% endif %}{{ stock.change_percent|round(1) }}%
+                                <div class="text-end">
+                                    <div>${{ stock.current_price|round(2) }}</div>
+                                    <div class="{% if stock.change_percent >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        {% if stock.change_percent >= 0 %}+{% endif %}{{ stock.change_percent|round(1) }}%
+                                    </div>
                                 </div>
                             </div>
                         </a>

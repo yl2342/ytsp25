@@ -412,7 +412,7 @@ def get_trending_stocks():
         list: List of trending stock data in standard format
     """
     # Define a set of consistently reliable trending stocks
-    trending_tickers = ["AAPL", "MSFT", "GOOGL", "TSLA", "NVDA"]
+    trending_tickers = ["SPY", "QQQ", "AAPL", "TSLA", "NVDA", "AMD", "GOOG", "LLY", "COST", "META", "NFLX", "AMZN", "AVGO", "PLTR"]
     
     logger.info("Fetching trending stocks data")
     result = []
@@ -421,13 +421,33 @@ def get_trending_stocks():
         stock_info = get_stock_info(ticker)
         if stock_info:
             result.append(stock_info)
+            if len(result) >= 14:  # Limit to 14 stocks
+                break
     
     # If we couldn't get enough stocks from yfinance, provide backup data
-    if len(result) < 3:
+    if len(result) < 5:
         logger.warning("Insufficient trending stocks data from API, using backup data")
         
         # Backup data for essential trending stocks
         backup_data = [
+            {
+                'ticker': 'SPY',
+                'name': 'SPDR S&P 500 ETF Trust',
+                'current_price': 532.95,
+                'change': 3.45,
+                'change_percent': 0.65,
+                'volume': 85345600,
+                'market_cap': None
+            },
+            {
+                'ticker': 'QQQ',
+                'name': 'Invesco QQQ Trust',
+                'current_price': 446.27,
+                'change': 5.18,
+                'change_percent': 1.17,
+                'volume': 35678900,
+                'market_cap': None
+            },
             {
                 'ticker': 'AAPL',
                 'name': 'Apple Inc.',
@@ -436,24 +456,6 @@ def get_trending_stocks():
                 'change_percent': 1.36,
                 'volume': 75345600,
                 'market_cap': 2750000000000
-            },
-            {
-                'ticker': 'MSFT',
-                'name': 'Microsoft Corporation',
-                'current_price': 390.27,
-                'change': 5.18,
-                'change_percent': 1.35,
-                'volume': 25678900,
-                'market_cap': 2900000000000
-            },
-            {
-                'ticker': 'GOOGL',
-                'name': 'Alphabet Inc.',
-                'current_price': 162.78,
-                'change': 1.23,
-                'change_percent': 0.76,
-                'volume': 18765400,
-                'market_cap': 2050000000000
             },
             {
                 'ticker': 'TSLA',
@@ -467,11 +469,92 @@ def get_trending_stocks():
             {
                 'ticker': 'NVDA',
                 'name': 'NVIDIA Corporation',
-                'current_price': 87.65,
-                'change': 4.32,
-                'change_percent': 5.19,
+                'current_price': 887.65,
+                'change': 24.32,
+                'change_percent': 2.82,
                 'volume': 154876500,
                 'market_cap': 2160000000000
+            },
+            {
+                'ticker': 'AMD',
+                'name': 'Advanced Micro Devices, Inc.',
+                'current_price': 164.75,
+                'change': 3.25,
+                'change_percent': 2.01,
+                'volume': 65678900,
+                'market_cap': 265000000000
+            },
+            {
+                'ticker': 'GOOG',
+                'name': 'Alphabet Inc.',
+                'current_price': 162.78,
+                'change': 1.23,
+                'change_percent': 0.76,
+                'volume': 18765400,
+                'market_cap': 2050000000000
+            },
+            {
+                'ticker': 'LLY',
+                'name': 'Eli Lilly and Company',
+                'current_price': 785.50,
+                'change': 15.25,
+                'change_percent': 1.98,
+                'volume': 22345600,
+                'market_cap': 745000000000
+            },
+            {
+                'ticker': 'COST',
+                'name': 'Costco Wholesale Corporation',
+                'current_price': 845.35,
+                'change': 12.80,
+                'change_percent': 1.54,
+                'volume': 18765430,
+                'market_cap': 375000000000
+            },
+            {
+                'ticker': 'META',
+                'name': 'Meta Platforms, Inc.',
+                'current_price': 475.89,
+                'change': 8.57,
+                'change_percent': 1.83,
+                'volume': 23456700,
+                'market_cap': 1220000000000
+            },
+            {
+                'ticker': 'NFLX',
+                'name': 'Netflix, Inc.',
+                'current_price': 628.55,
+                'change': 9.25,
+                'change_percent': 1.49,
+                'volume': 25345600,
+                'market_cap': 275000000000
+            },
+            {
+                'ticker': 'AMZN',
+                'name': 'Amazon.com, Inc.',
+                'current_price': 178.75,
+                'change': 3.25,
+                'change_percent': 1.85,
+                'volume': 45678900,
+                'market_cap': 1850000000000
+            },
+            {
+                'ticker': 'AVGO',
+                'name': 'Broadcom Inc.',
+                'current_price': 1375.50,
+                'change': 22.35,
+                'change_percent': 1.65,
+                'volume': 15345600,
+                'market_cap': 625000000000
+            },
+            {
+                'ticker': 'PLTR',
+                'name': 'Palantir Technologies Inc.',
+                'current_price': 22.75,
+                'change': 0.85,
+                'change_percent': 3.88,
+                'volume': 95678900,
+                'market_cap': 48000000000
             }
         ]
         
@@ -480,7 +563,7 @@ def get_trending_stocks():
         for backup_stock in backup_data:
             if backup_stock['ticker'] not in existing_tickers:
                 result.append(backup_stock)
-                if len(result) >= 5:  # Limit to 5 stocks
+                if len(result) >= 14:  # Limit to 14 stocks
                     break
     
     logger.info(f"Returning {len(result)} trending stocks")

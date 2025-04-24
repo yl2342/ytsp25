@@ -15,7 +15,7 @@ def confirm_deletion():
     answer = input("This will DELETE the existing database and create a new one. Are you sure? (y/n): ")
     return answer.lower() == 'y'
 
-# First, delete the old database if it exists
+# First, deletex the old database if it exists
 def reset_database():
     db_path = os.path.join(project_dir, 'instance', 'ytsp.db')
     
@@ -99,8 +99,8 @@ def seed_database():
             # Set a random balance between $40,000 and $120,000
             seed_user.balance = random.uniform(40000.00, 120000.00)
             
-            # Assign a random avatar ID (1-10) to each seed user
-            seed_user.avatar_id = random.randint(1, 10)
+            # Assign a random avatar ID (1-9) to each seed user
+            seed_user.avatar_id = random.randint(1, 9)
             
             seed_users.append(seed_user)
         

@@ -21,6 +21,12 @@ def search_users():
     results = []
     searched = False
     
+    # Get sort parameter (default to 'followers')
+    sort_by = request.args.get('sort_by', 'followers')
+    
+    # Check if this is a partial request
+    is_partial = request.args.get('partial', '0') == '1'
+    
     if form.validate_on_submit() or request.args.get('net_id'):
         # Get search term from form or URL parameters - keeping 'net_id' param name for compatibility
         search_term = form.net_id.data or request.args.get('net_id')
@@ -31,11 +37,52 @@ def search_users():
         # Exclude current user from results
         results = [user for user in users if user.id != current_user.id]
     
+    # Get popular users based on selected sorting
+    if sort_by == 'transactions':
+        # Sort by transaction count - need to join with Transaction table to count
+        from sqlalchemy import func
+        
+        # Create a subquery to get transaction counts
+        transaction_counts = db.session.query(
+            Transaction.user_id, 
+            func.count(Transaction.id).label('tx_count')
+        ).group_by(Transaction.user_id).subquery()
+        
+        # Join with User table and order by transaction count
+        popular_users = User.query.join(
+            transaction_counts,
+            User.id == transaction_counts.c.user_id
+        ).order_by(
+            transaction_counts.c.tx_count.desc()
+        ).limit(5).all()
+        
+        # Attach transaction counts to user objects for display
+        for user in popular_users:
+            user.tx_count = db.session.query(func.count(Transaction.id)).filter(
+                Transaction.user_id == user.id
+            ).scalar() or 0
+    else:
+        # Default: Sort by follower count
+        popular_users = User.query.join(
+            followers_table,
+            (followers_table.c.followed_id == User.id)
+        ).group_by(User.id).order_by(
+            db.func.count(followers_table.c.follower_id).desc()
+        ).limit(5).all()
+    
+    # If this is a partial request, only return the Popular Yale Traders section
+    if is_partial:
+        return render_template('social/partials/popular_users.html',
+                               popular_users=popular_users,
+                               sort_by=sort_by)
+    
     return render_template('social/search_users.html',
                            title='Find Yale Traders',
                            form=form,
                            results=results,
-                           searched=searched)
+                           searched=searched,
+                           popular_users=popular_users,
+                           sort_by=sort_by)
 
 
 @social_bp.route('/user/<int:user_id>')
