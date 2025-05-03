@@ -1,6 +1,6 @@
 # Yale Trading Simulation Platform (YTSP) 
 
-A Robinhood-like full-stack web application for Yale students to simulate stock investments, manage financial portfolios, and interact with a community of peers.
+A full-stack web application for Yale students to simulate stock investments, manage financial portfolios, and interact with a community of peers.
 
 --- 
 <div align="center">
@@ -368,4 +368,4 @@ This project is licensed under the MIT License
 
 ---
 
-© 2024 Yale University CPSC 519 Project Team No. 24. All rights reserved.
+© 2025 Yale University CPSC 519 Project Team No. 24. All rights reserved.
