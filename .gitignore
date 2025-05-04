@@ -29,6 +29,10 @@ venv/
 env/
 ENV/
 
+# environment 
+.env
+
+
 # database
 *.db
 backups/

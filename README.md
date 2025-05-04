@@ -233,20 +233,27 @@ sudo systemctl start postgresql
 # macOS: brew install postgresql
 # Ubuntu: sudo apt install postgresql postgresql-contrib
 
-# Create database and user
-createdb ytsp
-psql postgres -c "CREATE USER ytsp_server WITH PASSWORD 'secure_password';"
+# Method 1: Use the database setup script (recommended)
+python db_tools/db_manager.py --setup
+# Or skip confirmation with:
+python db_tools/db_manager.py --setup -y
+
+# Method 2: Manual setup with individual commands
+# Check if database exists and drop it if it does
+psql postgres -c "DROP DATABASE IF EXISTS ytsp;"
+# Check if user exists and drop it if it does
+psql postgres -c "DROP USER IF EXISTS ytsp_server;"
+# Create fresh database and user
+psql postgres -c "CREATE USER ytsp_server WITH PASSWORD 'cpsc519sp25';"
+psql postgres -c "CREATE DATABASE ytsp;"
 psql postgres -c "GRANT ALL PRIVILEGES ON DATABASE ytsp TO ytsp_server;"
+psql postgres -c "GRANT ALL ON SCHEMA public TO ytsp_server;"
 
-# Or using psql directly
-psql postgres
-> CREATE DATABASE ytsp;
-> CREATE USER ytsp_server WITH PASSWORD 'secure_password';
-> GRANT ALL PRIVILEGES ON DATABASE ytsp TO ytsp_server;
-> \q
+# Method 3: Manual setup using the SQL script directly
+psql postgres -f db_tools/setup_db.sql
 
-# Update your .env file with PostgreSQL connection string
-# DATABASE_URL=postgresql://ytsp_server:secure_password@localhost:5432/ytsp
+# After setup, update your .env file with PostgreSQL connection string
+# DATABASE_URL=postgresql://ytsp_server:cpsc519sp25@localhost:5432/ytsp
 ```
 
 7. **Initialize the database**
@@ -390,11 +397,12 @@ python db_tools/db_manager.py --migrate
 # PostgreSQL maintenance
 python db_tools/db_manager.py --vacuum --analyze
 
-# Database reset and seed operations
-python db_tools/db_manager.py --reset        # Drop and recreate all tables
-python db_tools/db_manager.py --seed         # Populate with sample data
-python db_tools/db_manager.py --reset-seed   # Reset and seed in one operation
-python db_tools/db_manager.py --reset-seed -y # Skip confirmation prompts
+# Database setup, reset and seed operations
+python db_tools/db_manager.py --setup       # Create database and user from SQL script
+python db_tools/db_manager.py --reset       # Drop and recreate all tables
+python db_tools/db_manager.py --seed        # Populate with sample data
+python db_tools/db_manager.py --reset-seed  # Reset and seed in one operation
+python db_tools/db_manager.py --setup -y    # Skip confirmation prompts
 ```
 
 For database backups and restores:

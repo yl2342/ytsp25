@@ -228,6 +228,43 @@ def run_maintenance(vacuum=False, analyze=False):
             print(f"Error during maintenance: {e}")
             return False
 
+def setup_database(confirm=True):
+    """
+    Set up the database by executing the setup_db.sql script.
+    This will create the database, user, and set permissions.
+    """
+    if confirm and not confirm_deletion():
+        print("Database setup cancelled.")
+        return False
+    
+    # Get the path to the SQL setup script
+    setup_script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'setup_db.sql')
+    
+    if not os.path.exists(setup_script_path):
+        print(f"Error: Setup script not found at {setup_script_path}")
+        return False
+    
+    print("Running database setup script...")
+    
+    try:
+        # Run the psql command to execute the script
+        import subprocess
+        cmd = ['psql', 'postgres', '-f', setup_script_path]
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        
+        if result.returncode != 0:
+            print(f"Error executing setup script: {result.stderr}")
+            return False
+        
+        print("Setup script output:")
+        print(result.stdout)
+        print("\nDatabase and user setup completed successfully!")
+        print("Remember to update your .env file with the correct database URL if needed.")
+        return True
+    except Exception as e:
+        print(f"Error during database setup: {e}")
+        return False
+
 def confirm_deletion():
     """Confirm that the user wants to delete the database."""
     answer = input("This will DELETE the existing database and create a new one. Are you sure? (y/n): ")
@@ -638,6 +675,7 @@ def main():
     parser.add_argument('--reset', action='store_true', help='Reset the database (drop and recreate all tables)')
     parser.add_argument('--seed', action='store_true', help='Seed the database with sample data')
     parser.add_argument('--reset-seed', action='store_true', help='Reset and seed the database in one operation')
+    parser.add_argument('--setup', action='store_true', help='Set up database and user using SQL script')
     parser.add_argument('--yes', '-y', action='store_true', help='Skip confirmation prompts (use with caution)')
     
     # Convenience command
@@ -648,7 +686,7 @@ def main():
     # Default to --verify if no args provided
     if not any([args.verify, args.info, args.test, args.migrate, 
                 args.vacuum, args.analyze, args.reset, args.seed, 
-                args.reset_seed, args.all]):
+                args.reset_seed, args.setup, args.all]):
         args.verify = True
     
     # If --all is specified, run all basic checks
@@ -656,6 +694,10 @@ def main():
         args.verify = args.info = args.test = True
     
     success = True
+    
+    if args.setup:
+        setup_success = setup_database(not args.yes)
+        success = success and setup_success
     
     if args.verify:
         connection_success = verify_connection()

@@ -36,7 +36,7 @@ def create_app(config_class=None):
     
     # Configure app from environment variables
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-key-for-testing')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://ytsp_server:password@localhost:5432/ytsp')
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://ytsp_server:cpsc519sp25@localhost:5432/ytsp')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Disable to improve performance
     
     # Basic CAS configuration - use simpler, minimal config
