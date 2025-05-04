@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 """
 Database management utility for the Yale Trading Simulation Platform.
-Provides tools for verification, migration, maintenance, and seeding of the database.
+Provides tools for verification, migration, and maintenance of the database.
 """
 import os
 import sys
 import argparse
-import random
-from datetime import datetime, timedelta
-import zoneinfo
+import subprocess
 
 # Get the absolute path to the project root directory
 project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -248,7 +246,6 @@ def setup_database(confirm=True):
     
     try:
         # Run the psql command to execute the script
-        import subprocess
         cmd = ['psql', 'postgres', '-f', setup_script_path]
         result = subprocess.run(cmd, capture_output=True, text=True)
         
@@ -300,361 +297,6 @@ def reset_database(confirm=True):
     
     return True
 
-def seed_database():
-    """Seed the database with sample data."""
-    from app.models.user import User
-    from app.models.stock import StockHolding, Transaction
-    from app.models.social import TradingPost, Comment, PostInteraction
-    
-    app = create_app()
-    
-    with app.app_context():
-        print("Seeding database with sample data...")
-        
-        # Create admin user
-        print("Creating users...")
-        admin = User(
-            net_id='admin',
-            first_name='Admin',
-            last_name='User'
-        )
-        admin.balance = 100000.00  # $100,000 starting balance
-        admin.avatar_id = random.randint(1, 10)  # Randomly assign avatar from available options
-        
-        # Create seed users with "SEED" as last name
-        seed_users = []
-        
-        # List of common first names
-        first_names = ['Emma', 'James', 'Sophia', 'Michael', 'Olivia', 
-                       'William', 'Ava', 'Alexander', 'Isabella', 'Daniel', 
-                       'Mia', 'Matthew', 'Charlotte', 'Ethan', 'Amelia']
-        
-        # Create 15 seed users (for a total of 16 users including admin)
-        for i in range(15):
-            # Randomly select a first name
-            first_name = first_names[i % len(first_names)]
-            
-            # Create a net_id pattern like "fs123" where f=first initial, s=S for SEED
-            net_id = f"{first_name[0].lower()}s{random.randint(100, 999)}"
-            
-            # Create the user
-            seed_user = User(
-                net_id=net_id,
-                first_name=first_name,
-                last_name='SEED'  # All have SEED as last name for identification
-            )
-            
-            # Set a random balance between $40,000 and $120,000
-            seed_user.balance = random.uniform(40000.00, 120000.00)
-            
-            # Assign a random avatar ID (1-9) to each seed user
-            seed_user.avatar_id = random.randint(1, 9)
-            
-            seed_users.append(seed_user)
-        
-        # Set created_at dates to be staggered
-        now = datetime.now(zoneinfo.ZoneInfo("America/New_York"))
-        
-        # Admin user
-        admin.created_at_edt = now - timedelta(days=60)
-        
-        # Seed users - staggered creation between 7 and 55 days ago
-        for user in seed_users:
-            user.created_at_edt = now - timedelta(days=random.randint(7, 55))
-        
-        # Last login times
-        # Admin user
-        admin.last_login_edt = now - timedelta(hours=1)
-        
-        # Seed users - last login between 1 hour and 5 days ago
-        for user in seed_users:
-            login_hours_ago = random.randint(1, 120)  # Between 1 hour and 5 days (120 hours)
-            user.last_login_edt = now - timedelta(hours=login_hours_ago)
-        
-        # Combine all users
-        all_users = [admin] + seed_users
-        
-        # Add all users to the database
-        db.session.add_all(all_users)
-        db.session.commit()
-        
-        # Create sample stock holdings
-        print("Creating stock holdings...")
-        stocks = [
-            {'ticker': 'AAPL', 'company_name': 'Apple Inc.', 'price': 184.27},
-            {'ticker': 'MSFT', 'company_name': 'Microsoft Corporation', 'price': 428.52},
-            {'ticker': 'GOOGL', 'company_name': 'Alphabet Inc.', 'price': 153.39},
-            {'ticker': 'AMZN', 'company_name': 'Amazon.com, Inc.', 'price': 177.23},
-            {'ticker': 'NVDA', 'company_name': 'NVIDIA Corporation', 'price': 902.50},
-            {'ticker': 'META', 'company_name': 'Meta Platforms, Inc.', 'price': 475.80},
-            {'ticker': 'TSLA', 'company_name': 'Tesla, Inc.', 'price': 168.19},
-            {'ticker': 'BAC', 'company_name': 'Bank of America Corporation', 'price': 39.76},
-            {'ticker': 'JPM', 'company_name': 'JPMorgan Chase & Co.', 'price': 198.73},
-            {'ticker': 'V', 'company_name': 'Visa Inc.', 'price': 271.40},
-            {'ticker': 'WMT', 'company_name': 'Walmart Inc.', 'price': 78.65},
-            {'ticker': 'PG', 'company_name': 'Procter & Gamble Co.', 'price': 167.30},
-            {'ticker': 'DIS', 'company_name': 'The Walt Disney Company', 'price': 113.45},
-            {'ticker': 'KO', 'company_name': 'The Coca-Cola Company', 'price': 62.74},
-            {'ticker': 'NFLX', 'company_name': 'Netflix, Inc.', 'price': 648.92}
-        ]
-        
-        # Each user buys some stocks
-        for user in all_users:
-            # Select 4-8 random stocks for each user
-            user_stocks = random.sample(stocks, random.randint(4, 8))
-            
-            for stock in user_stocks:
-                # Decide quantity (between 5 and 80 shares)
-                quantity = random.randint(5, 80)
-                price = stock['price'] * (1 - random.uniform(0.05, 0.15))  # Bought at historical price (5-15% lower)
-                
-                # Create holding
-                holding = StockHolding(
-                    user_id=user.id,
-                    ticker=stock['ticker'],
-                    company_name=stock['company_name'],
-                    quantity=quantity,
-                    buy_price=price
-                )
-                holding.current_price = stock['price']  # Current price
-                db.session.add(holding)
-                
-                # Create transaction record
-                transaction = Transaction(
-                    user_id=user.id,
-                    ticker=stock['ticker'],
-                    quantity=quantity,
-                    price=price,
-                    transaction_type='buy'
-                )
-                
-                # Set transaction date to be between user creation and now
-                days_since_created = (now - user.created_at_edt).days
-                if days_since_created > 0:
-                    transaction_days_ago = random.randint(1, days_since_created)
-                else:
-                    transaction_days_ago = 1
-                transaction.created_at_edt = now - timedelta(days=transaction_days_ago)
-                
-                db.session.add(transaction)
-                
-                # SEED users have higher chance of creating a trading post (80% vs 50% for admin)
-                post_chance = 0.8 if user.last_name == 'SEED' else 0.5
-                
-                # Maybe create a trading post about this purchase
-                if random.random() < post_chance:
-                    # Different content based on user type
-                    if user.last_name == 'SEED':
-                        content_options = [
-                            f"As a seed investor, I see great potential in {stock['company_name']}. Adding {quantity} shares at ${price:.2f}.",
-                            f"My seed portfolio now includes {quantity} shares of {stock['ticker']} at ${price:.2f}. Expecting great returns!",
-                            f"Just added {stock['ticker']} to my seed investments. {quantity} shares at ${price:.2f}.",
-                        ]
-                    else:
-                        content_options = [
-                            f"I believe {stock['company_name']} has great potential for growth. Adding {quantity} shares to my portfolio at ${price:.2f}.",
-                            f"Just invested in {quantity} shares of {stock['ticker']} at ${price:.2f}. Thoughts?",
-                            f"Added {stock['ticker']} to my portfolio: {quantity} shares at ${price:.2f}.",
-                        ]
-                    
-                    content = random.choice(content_options)
-                    
-                    # Create the trading post
-                    post = TradingPost(
-                        user_id=user.id,
-                        title=f"Just bought {stock['ticker']}!",
-                        content=content,
-                        transaction_id=transaction.id,
-                        is_public=True
-                    )
-                    
-                    # Set post date to be shortly after transaction
-                    post.created_at = transaction.created_at_edt + timedelta(minutes=random.randint(5, 60))
-                    
-                    db.session.add(post)
-                    
-                    # Add some likes/dislikes to the post
-                    potential_likers = [u for u in all_users if u.id != user.id]
-                    num_likes = random.randint(0, min(7, len(potential_likers)))
-                    
-                    if num_likes > 0:
-                        likers = random.sample(potential_likers, num_likes)
-                        for liker in likers:
-                            interaction = PostInteraction(
-                                post_id=post.id,
-                                user_id=liker.id,
-                                interaction_type='like' if random.random() < 0.8 else 'dislike'
-                            )
-                            db.session.add(interaction)
-                    
-                    # Add some comments
-                    potential_commenters = [u for u in all_users if u.id != user.id]
-                    num_comments = random.randint(0, min(5, len(potential_commenters)))
-                    
-                    if num_comments > 0:
-                        commenters = random.sample(potential_commenters, num_comments)
-                        
-                        buy_comments = [
-                            f"Good choice! I'm also bullish on {stock['ticker']}.",
-                            f"What's your price target for {stock['ticker']}?",
-                            f"Nice entry point! I bought some at ${stock['price'] * 1.1:.2f} last month.",
-                            f"What made you decide to invest in {stock['company_name']}?",
-                            f"I've had {stock['ticker']} for a while, solid stock!",
-                            f"Interesting choice, I'm watching this one closely.",
-                        ]
-                        
-                        for commenter in commenters:
-                            comment = Comment(
-                                post_id=post.id,
-                                user_id=commenter.id,
-                                content=random.choice(buy_comments)
-                            )
-                            comment.created_at = post.created_at + timedelta(hours=random.randint(1, 24))
-                            db.session.add(comment)
-            
-            # Maybe sell some of the stock
-            if random.random() < 0.4:  # 40% chance to sell some stock
-                # Select a stock to sell from this user's holdings
-                holdings = [h for h in db.session.query(StockHolding).filter_by(user_id=user.id).all()]
-                
-                if holdings:
-                    holding = random.choice(holdings)
-                    
-                    # Sell between 30% and 80% of holdings
-                    if holding.quantity > 1:
-                        sell_quantity = random.randint(max(1, int(holding.quantity * 0.3)), 
-                                                       max(1, int(holding.quantity * 0.8)))
-                        
-                        # Calculate sell price (0-15% higher than buy price)
-                        sell_price = holding.buy_price * (1 + random.uniform(0, 0.15))
-                        
-                        # Create transaction
-                        sell_transaction = Transaction(
-                            user_id=user.id,
-                            ticker=holding.ticker,
-                            quantity=sell_quantity,
-                            price=sell_price,
-                            transaction_type='sell'
-                        )
-                        
-                        # Set sell date to be after buy date
-                        days_since_bought = (now - transaction.created_at_edt).days
-                        if days_since_bought > 1:
-                            sell_days_ago = random.randint(1, days_since_bought)
-                            sell_transaction.created_at_edt = now - timedelta(days=sell_days_ago)
-                        else:
-                            sell_transaction.created_at_edt = now - timedelta(hours=random.randint(1, 12))
-                        
-                        db.session.add(sell_transaction)
-                        
-                        # Maybe create a post about the sale (60% chance)
-                        if random.random() < 0.6:
-                            sell_post = TradingPost(
-                                user_id=user.id,
-                                title=f"Sold some {holding.ticker}",
-                                content=f"Just sold {sell_quantity} shares of {holding.ticker} at ${sell_price:.2f}. " +
-                                        random.choice([
-                                            f"Taking some profits!",
-                                            f"Rebalancing my portfolio.",
-                                            f"Moving into different sectors.",
-                                            f"Locking in gains!",
-                                            f"Needed some liquidity for a new opportunity."
-                                        ]),
-                                transaction_id=sell_transaction.id,
-                                is_public=True
-                            )
-                            
-                            # Set post date to be shortly after transaction
-                            sell_post.created_at = sell_transaction.created_at_edt + timedelta(minutes=random.randint(5, 60))
-                            
-                            db.session.add(sell_post)
-                            
-                            # Add interactions and comments similar to buy posts
-                            pot_interactors = [u for u in all_users if u.id != user.id]
-                            num_interactors = random.randint(0, min(5, len(pot_interactors)))
-                            
-                            if num_interactors > 0:
-                                interactors = random.sample(pot_interactors, num_interactors)
-                                for interactor in interactors:
-                                    interaction = PostInteraction(
-                                        post_id=sell_post.id,
-                                        user_id=interactor.id,
-                                        interaction_type='like' if random.random() < 0.7 else 'dislike'
-                                    )
-                                    db.session.add(interaction)
-                            
-                            # Maybe add comments
-                            pot_commenters = [u for u in all_users if u.id != user.id]
-                            num_coms = random.randint(0, min(3, len(pot_commenters)))
-                            
-                            if num_coms > 0:
-                                commenters = random.sample(pot_commenters, num_coms)
-                                
-                                sell_comments = [
-                                    f"Good move taking profits on {holding.ticker}!",
-                                    f"Do you think {holding.ticker} still has room to grow?",
-                                    f"What are you planning to buy with these profits?",
-                                    f"I'm still holding my {holding.ticker} shares for now.",
-                                    f"Smart timing on the sale!",
-                                    f"Are you planning to buy back in if it dips?"
-                                ]
-                                
-                                for commenter in commenters:
-                                    comment = Comment(
-                                        post_id=sell_post.id,
-                                        user_id=commenter.id,
-                                        content=random.choice(sell_comments)
-                                    )
-                                    comment.created_at = sell_post.created_at + timedelta(hours=random.randint(1, 24))
-                                    db.session.add(comment)
-                            
-                        # Update holding quantity
-                        holding.quantity -= sell_quantity
-                        
-                        # Add to user balance
-                        user.balance += sell_quantity * sell_price
-        
-        # Commit all changes
-        db.session.commit()
-        
-        # Print summary of seed users
-        print("\nCreated the following users:")
-        print(f"- Admin User (net_id: admin)")
-        print("\nCreated the following SEED users:")
-        for user in seed_users:
-            print(f"- {user.first_name} SEED (net_id: {user.net_id})")
-            
-        # Print statistics
-        post_count = db.session.query(TradingPost).count()
-        comment_count = db.session.query(Comment).count()
-        transaction_count = db.session.query(Transaction).count()
-        holding_count = db.session.query(StockHolding).count()
-        
-        print(f"\nSeed data statistics:")
-        print(f"- {len(all_users)} users created")
-        print(f"- {post_count} posts created")
-        print(f"- {comment_count} comments created")
-        print(f"- {transaction_count} transactions created")
-        print(f"- {holding_count} stock holdings created")
-        
-        print("\nNOTE: Users are created without passwords since the application uses Yale CAS authentication.")
-        print("To use these accounts, manually update your session data or register with these NetIDs via the Yale CAS test interface.")
-        
-        return True
-
-def reset_and_seed(confirm=True):
-    """Reset the database and seed it with sample data."""
-    if reset_database(confirm):
-        seed_database()
-        print("Database reset and seeding complete!")
-        print("You can now run the application with 'flask run' or 'python run.py'")
-        print("\nSample user credentials:")
-        print("Admin: net_id='admin' (use Yale CAS for authentication)")
-        return True
-    else:
-        print("Database reset and seed was cancelled.")
-        return False
-
 def main():
     """Main function to parse arguments and run commands."""
     parser = argparse.ArgumentParser(description='Database Management for YTSP')
@@ -671,10 +313,8 @@ def main():
     parser.add_argument('--vacuum', action='store_true', help='Run VACUUM (PostgreSQL only)')
     parser.add_argument('--analyze', action='store_true', help='Run ANALYZE (PostgreSQL only)')
     
-    # Reset and seed commands
+    # Reset commands
     parser.add_argument('--reset', action='store_true', help='Reset the database (drop and recreate all tables)')
-    parser.add_argument('--seed', action='store_true', help='Seed the database with sample data')
-    parser.add_argument('--reset-seed', action='store_true', help='Reset and seed the database in one operation')
     parser.add_argument('--setup', action='store_true', help='Set up database and user using SQL script')
     parser.add_argument('--yes', '-y', action='store_true', help='Skip confirmation prompts (use with caution)')
     
@@ -685,8 +325,7 @@ def main():
     
     # Default to --verify if no args provided
     if not any([args.verify, args.info, args.test, args.migrate, 
-                args.vacuum, args.analyze, args.reset, args.seed, 
-                args.reset_seed, args.setup, args.all]):
+                args.vacuum, args.analyze, args.reset, args.setup, args.all]):
         args.verify = True
     
     # If --all is specified, run all basic checks
@@ -725,14 +364,6 @@ def main():
     if args.reset:
         reset_success = reset_database(not args.yes)
         success = success and reset_success
-        
-    if args.seed:
-        seed_success = seed_database()
-        success = success and seed_success
-        
-    if args.reset_seed:
-        reset_seed_success = reset_and_seed(not args.yes)
-        success = success and reset_seed_success
     
     if success:
         print("\n✓ All database operations completed successfully!")

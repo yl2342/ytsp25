@@ -270,15 +270,7 @@ python db_tools/db_manager.py --migrate
 python db_tools/db_manager.py --verify
 ```
 
-8. **Populate with sample data (optional)**
-```bash
-# After database migrations have been applied
-python db_tools/db_manager.py --seed
-# OR reset and seed in one command
-python db_tools/db_manager.py --reset-seed
-```
-
-9. **Run the application**
+8. **Run the application**
 ```bash
 flask run
 # or
@@ -397,11 +389,9 @@ python db_tools/db_manager.py --migrate
 # PostgreSQL maintenance
 python db_tools/db_manager.py --vacuum --analyze
 
-# Database setup, reset and seed operations
+# Database setup and reset operations
 python db_tools/db_manager.py --setup       # Create database and user from SQL script
 python db_tools/db_manager.py --reset       # Drop and recreate all tables
-python db_tools/db_manager.py --seed        # Populate with sample data
-python db_tools/db_manager.py --reset-seed  # Reset and seed in one operation
 python db_tools/db_manager.py --setup -y    # Skip confirmation prompts
 ```
 
@@ -429,7 +419,6 @@ To restore a database:
 
 4. **Database Reset**
    - Use the reset script which will recreate all tables: `python db_tools/db_manager.py --reset`
-   - Reset and seed in one operation: `python db_tools/db_manager.py --reset-seed`
 
 ---
 
@@ -473,7 +462,6 @@ If you encounter database issues:
 
 4. **Database Reset**
    - Use the reset script which will recreate all tables: `python db_tools/db_manager.py --reset`
-   - Reset and seed in one operation: `python db_tools/db_manager.py --reset-seed`
 
 5. **Performance Issues**
    - Slow queries may indicate missing indexes

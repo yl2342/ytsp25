@@ -29,9 +29,8 @@ venv/
 env/
 ENV/
 
-# environment 
+# environment var
 .env
-
 
 # database
 *.db
