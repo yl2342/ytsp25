@@ -838,8 +838,16 @@
                             displayCallback(data.transactions);
                             return true;
                         } else {
+                            // Call the display callback with an empty array
+                            displayCallback([]);
                             return false;
                         }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching transactions:', error);
+                        // Call the callback with an empty array on error
+                        displayCallback([]);
+                        return false;
                     });
             }
             
@@ -972,14 +980,16 @@
                             // Hide loading indicator
                             transactionsPromptLoading.style.display = 'none';
                             
-                            // Group transactions by ticker
+                            // Group transactions by ticker (if any)
                             const tickerGroups = {};
-                            transactions.forEach(transaction => {
-                                if (!tickerGroups[transaction.ticker]) {
-                                    tickerGroups[transaction.ticker] = [];
-                                }
-                                tickerGroups[transaction.ticker].push(transaction);
-                            });
+                            if (transactions && transactions.length > 0) {
+                                transactions.forEach(transaction => {
+                                    if (!tickerGroups[transaction.ticker]) {
+                                        tickerGroups[transaction.ticker] = [];
+                                    }
+                                    tickerGroups[transaction.ticker].push(transaction);
+                                });
+                            }
                             
                             // Get stock details and handle possible undefined values
                             let stockPrice = 0;
@@ -1064,46 +1074,68 @@ Current Holdings:
                                         prompt += `\n`;
                                     }
                                     
-                                    // Now continue with transaction history
-                                    prompt += `Here is my transaction history:\n\n`;
-                                    
-                                    // First, add a summary
-                                    const totalBuys = transactions.filter(t => t.transaction_type === 'buy').length;
-                                    const totalSells = transactions.filter(t => t.transaction_type === 'sell').length;
-                                    
-                                    prompt += 'TRANSACTION SUMMARY:\n';
-                                    prompt += `Total transactions: ${transactions.length}\n`;
-                                    prompt += `Buy transactions: ${totalBuys}\n`;
-                                    prompt += `Sell transactions: ${totalSells}\n\n`;
-                                    
-                                    // Then add transaction details grouped by ticker
-                                    prompt += 'TRANSACTION HISTORY BY STOCK:\n\n';
-                                    
-                                    Object.keys(tickerGroups).forEach(ticker => {
-                                        const tickerTransactions = tickerGroups[ticker];
+                                    // Add transaction history section only if there are transactions
+                                    if (transactions && transactions.length > 0) {
+                                        prompt += `Here is my transaction history:\n\n`;
                                         
-                                        prompt += `${ticker} - ${tickerTransactions.length} transactions\n`;
-                                        prompt += '----------------\n';
+                                        // First, add a summary
+                                        const totalBuys = transactions.filter(t => t.transaction_type === 'buy').length;
+                                        const totalSells = transactions.filter(t => t.transaction_type === 'sell').length;
                                         
-                                        tickerTransactions.forEach((transaction, index) => {
-                                            const date = new Date(transaction.timestamp);
-                                            const formattedDate = date.toLocaleDateString() + ' ' + 
-                                                                date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                                        prompt += 'TRANSACTION SUMMARY:\n';
+                                        prompt += `Total transactions: ${transactions.length}\n`;
+                                        prompt += `Buy transactions: ${totalBuys}\n`;
+                                        prompt += `Sell transactions: ${totalSells}\n\n`;
+                                        
+                                        // Then add transaction details grouped by ticker
+                                        prompt += 'TRANSACTION HISTORY BY STOCK:\n\n';
+                                        
+                                        Object.keys(tickerGroups).forEach(ticker => {
+                                            const tickerTransactions = tickerGroups[ticker];
                                             
-                                            const action = transaction.transaction_type === 'buy' ? 'Bought' : 'Sold';
+                                            prompt += `${ticker} - ${tickerTransactions.length} transactions\n`;
+                                            prompt += '----------------\n';
                                             
-                                            prompt += `${action} ${transaction.quantity} shares at $${parseFloat(transaction.price).toFixed(2)} per share (Total: $${parseFloat(transaction.total_amount).toFixed(2)}) on ${formattedDate}\n`;
+                                            tickerTransactions.forEach((transaction, index) => {
+                                                const date = new Date(transaction.timestamp);
+                                                const formattedDate = date.toLocaleDateString() + ' ' + 
+                                                                    date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                                                
+                                                const action = transaction.transaction_type === 'buy' ? 'Bought' : 'Sold';
+                                                
+                                                prompt += `${action} ${transaction.quantity} shares at $${parseFloat(transaction.price).toFixed(2)} per share (Total: $${parseFloat(transaction.total_amount).toFixed(2)}) on ${formattedDate}\n`;
+                                            });
+                                            
+                                            prompt += '\n';
                                         });
-                                        
-                                        prompt += '\n';
-                                    });
+                                    } else {
+                                        // No transaction history available
+                                        prompt += `I am a new trader with no transaction history yet.\n\n`;
+                                    }
                                     
-                                    // Add instructions for the AI
+                                    // Add instructions for the AI - adjusted for users with or without transaction history
                                     prompt += `Please do a search on the internet for the recent relevant news to get a better understanding about the stock and the current overall market.
-Then based on my personal portfolio, transaction history, the current stock information, and relevant news, market situation and trends,
+Then based on`;
+                                    
+                                    if (transactions && transactions.length > 0) {
+                                        prompt += ` my personal portfolio, transaction history,`;
+                                    } else {
+                                        prompt += ` my personal portfolio,`;
+                                    }
+                                    
+                                    prompt += ` the current stock information, and relevant news, market situation and trends,
 make a recommendation for my proposed ${currentAction.toUpperCase()} order of ${currentQuantity} shares of {{ stock.ticker }}.
-Specifically, please provide:
-1. An analysis of my trading patterns, preferences, and portfolio diversification
+Specifically, please provide:`;
+
+                                    if (transactions && transactions.length > 0) {
+                                        prompt += `
+1. An analysis of my trading patterns, preferences, and portfolio diversification`;
+                                    } else {
+                                        prompt += `
+1. A beginner-friendly analysis based on my portfolio composition`;
+                                    }
+                                    
+                                    prompt += `
 2. A specific recommendation for my proposed ${currentAction.toUpperCase()} order of ${currentQuantity} shares of {{ stock.ticker }} considering my current holdings and cash balance
 3. Alternative trading strategies I could consider
 4. Any potential risks or opportunities to be aware of.  `;
@@ -1144,46 +1176,66 @@ Specifically, please provide:
                                 .catch(error => {
                                     console.error('Error fetching portfolio data:', error);
                                     
-                                    // Continue with transaction history without portfolio data
-                                    prompt += `Here is my transaction history:\n\n`;
-                                    
-                                    // First, add a summary
-                                    const totalBuys = transactions.filter(t => t.transaction_type === 'buy').length;
-                                    const totalSells = transactions.filter(t => t.transaction_type === 'sell').length;
-                                    
-                                    prompt += 'TRANSACTION SUMMARY:\n';
-                                    prompt += `Total transactions: ${transactions.length}\n`;
-                                    prompt += `Buy transactions: ${totalBuys}\n`;
-                                    prompt += `Sell transactions: ${totalSells}\n\n`;
-                                    
-                                    // Then add transaction details grouped by ticker
-                                    prompt += 'TRANSACTION HISTORY BY STOCK:\n\n';
-                                    
-                                    Object.keys(tickerGroups).forEach(ticker => {
-                                        const tickerTransactions = tickerGroups[ticker];
+                                    // Generate prompt with just stock info and transaction history (if available)
+                                    if (transactions && transactions.length > 0) {
+                                        prompt += `Here is my transaction history:\n\n`;
                                         
-                                        prompt += `${ticker} - ${tickerTransactions.length} transactions\n`;
-                                        prompt += '----------------\n';
+                                        // First, add a summary
+                                        const totalBuys = transactions.filter(t => t.transaction_type === 'buy').length;
+                                        const totalSells = transactions.filter(t => t.transaction_type === 'sell').length;
                                         
-                                        tickerTransactions.forEach((transaction, index) => {
-                                            const date = new Date(transaction.timestamp);
-                                            const formattedDate = date.toLocaleDateString() + ' ' + 
-                                                                date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                                        prompt += 'TRANSACTION SUMMARY:\n';
+                                        prompt += `Total transactions: ${transactions.length}\n`;
+                                        prompt += `Buy transactions: ${totalBuys}\n`;
+                                        prompt += `Sell transactions: ${totalSells}\n\n`;
+                                        
+                                        // Then add transaction details grouped by ticker
+                                        prompt += 'TRANSACTION HISTORY BY STOCK:\n\n';
+                                        
+                                        Object.keys(tickerGroups).forEach(ticker => {
+                                            const tickerTransactions = tickerGroups[ticker];
                                             
-                                            const action = transaction.transaction_type === 'buy' ? 'Bought' : 'Sold';
+                                            prompt += `${ticker} - ${tickerTransactions.length} transactions\n`;
+                                            prompt += '----------------\n';
                                             
-                                            prompt += `${action} ${transaction.quantity} shares at $${parseFloat(transaction.price).toFixed(2)} per share (Total: $${parseFloat(transaction.total_amount).toFixed(2)}) on ${formattedDate}\n`;
+                                            tickerTransactions.forEach((transaction, index) => {
+                                                const date = new Date(transaction.timestamp);
+                                                const formattedDate = date.toLocaleDateString() + ' ' + 
+                                                                    date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                                                
+                                                const action = transaction.transaction_type === 'buy' ? 'Bought' : 'Sold';
+                                                
+                                                prompt += `${action} ${transaction.quantity} shares at $${parseFloat(transaction.price).toFixed(2)} per share (Total: $${parseFloat(transaction.total_amount).toFixed(2)}) on ${formattedDate}\n`;
+                                            });
+                                            
+                                            prompt += '\n';
                                         });
-                                        
-                                        prompt += '\n';
-                                    });
+                                    } else {
+                                        // No transaction history available
+                                        prompt += `I am a new trader with no transaction history yet.\n\n`;
+                                    }
                                     
                                     // Add instructions for the AI
                                     prompt += `Please do a search on the internet for the recent relevant news to get a better understanding about the stock and the current overall market.
-Then based on my personal transaction history, the current stock information, and relevant news, market situation and trends,
+Then based on`;
+                                    
+                                    if (transactions && transactions.length > 0) {
+                                        prompt += ` my personal transaction history,`;
+                                    }
+                                    
+                                    prompt += ` the current stock information, and relevant news, market situation and trends,
 make a recommendation for my proposed ${currentAction.toUpperCase()} order of ${currentQuantity} shares of {{ stock.ticker }}.
-Specifically, please provide:
-1. An analysis of my trading patterns and preferences
+Specifically, please provide:`;
+
+                                    if (transactions && transactions.length > 0) {
+                                        prompt += `
+1. An analysis of my trading patterns and preferences`;
+                                    } else {
+                                        prompt += `
+1. A beginner-friendly analysis of the stock`;
+                                    }
+                                    
+                                    prompt += `
 2. A specific recommendation for my proposed ${currentAction.toUpperCase()} order of ${currentQuantity} shares of {{ stock.ticker }}
 3. Alternative trading strategies I could consider
 4. Any potential risks or opportunities to be aware of.  `;
@@ -1221,27 +1273,6 @@ Specifically, please provide:
                                         });
                                     }
                                 });
-                        })
-                        .catch(error => {
-                            console.error('Error fetching transactions:', error);
-                            transactionsPromptLoading.style.display = 'none';
-                            transactionsPromptEmpty.style.display = 'block';
-                            transactionsPromptEmpty.textContent = 'Error loading transactions. Please try again.';
-                            
-                            // Hide confirm button if there was an error
-                            if (confirmPromptBtn) {
-                                confirmPromptBtn.style.display = 'none';
-                            }
-                        })
-                        .then(hasTransactions => {
-                            if (!hasTransactions) {
-                                transactionsPromptEmpty.style.display = 'block';
-                                
-                                // Hide confirm button if there are no transactions
-                                if (confirmPromptBtn) {
-                                    confirmPromptBtn.style.display = 'none';
-                                }
-                            }
                         });
                     } else {
                         // Hide the transactions prompt
@@ -1393,7 +1424,25 @@ Specifically, please provide:
                             // Hide loading indicator and show error
                             aiResponseLoading.style.display = 'none';
                             aiResponseError.style.display = 'block';
-                            aiResponseErrorText.textContent = error.message || 'Error connecting to AI service';
+                            
+                            // More informative error message based on the error
+                            let errorMessage = error.message || 'Error connecting to AI service';
+                            
+                            // For HTTP 500 errors, provide more helpful troubleshooting information
+                            if (error.message && error.message.includes('status: 500')) {
+                                errorMessage = 'The AI service is experiencing issues. This may be related to the Gemini API configuration. ' +
+                                              'Please try again later or contact the administrator to check if the API key is set up correctly.';
+                            } else if (error.message && error.message.includes('status: 401')) {
+                                errorMessage = 'Authentication error with the AI service. The API key may be invalid. ' +
+                                              'Please contact the administrator to verify the API configuration.';
+                            } else if (error.message && error.message.includes('status: 403')) {
+                                errorMessage = 'Access denied to the AI service. The API key may have insufficient permissions. ' +
+                                              'Please contact the administrator to verify the API configuration.';
+                            } else if (!navigator.onLine) {
+                                errorMessage = 'You appear to be offline. Please check your internet connection and try again.';
+                            }
+                            
+                            aiResponseErrorText.textContent = errorMessage;
                             console.error('Error getting AI advice:', error);
                         });
                     }
