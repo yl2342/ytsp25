@@ -116,7 +116,7 @@ This is the beta version of the platform with core trading functionality and AI-
 
 ### Backend
 - **Framework**: Python Flask with Blueprints architecture
-- **Database**: SQLite (ytsp.db in the instance directory for development)
+- **Database**: PostgreSQL
 - **ORM**: SQLAlchemy for database management
 - **Authentication**: Flask-Login with secure password handling via Flask-Bcrypt and Yale CAS
 - **Forms**: WTForms with CSRF protection
@@ -159,14 +159,14 @@ ytsp/
 │   ├── templates/          # HTML templates
 │   └── utils/              # Utility functions
 ├── migrations/             # Database migrations
-├── tests/                  # Test suite
+├── db_tools/               # Database management utilities
+│   ├── backup_db.sh        # Database backup script
+│   └── db_manager.py       # All-in-one database management utility
+├── backups/                # Directory for database backups
 ├── venv/                   # Virtual environment
 ├── .env                    # Environment variables (includes GEMINI_API_KEY)
 ├── .env.example            # Example environment file
-├── instance/               # Instance directory
-│   └── ytsp.db             # SQLite database
 ├── requirements.txt        # Python dependencies
-├── reset_seed_db.py        # Database reset and seeding utility
 ├── run.py                  # Application entry point
 └── README.md               # This file
 ```
@@ -178,6 +178,7 @@ ytsp/
 ### Prerequisites
 - Python 3.8 or higher
 - Git
+- PostgreSQL 12 or higher
 - Internet connection for API access
 - Google Gemini API key (for AI-assisted trading features)
 
@@ -201,7 +202,7 @@ pip install -r requirements.txt
 ```
 
 4. **Configure environment variables**
-- google gemini api key is required for AI-assisted features
+- Google gemini api key is required for AI-assisted features
 - To get the key, please visit https://aistudio.google.com/app/apikey
 - Note the rate limit for the free tier gemini-2.0-flash API call
   - RPM (requests per minute) is 15
@@ -211,29 +212,89 @@ pip install -r requirements.txt
 cp .env.example .env
 # Edit .env with your configuration
 # Be sure to include your GEMINI_API_KEY for AI-assisted features
+# Be sure to set DATABASE_URL for PostgreSQL
 ```
 
-5. **Initialize the database**
+5. **Start the PostgreSQL service**
 ```bash
-flask db init
-flask db migrate -m "Initial migration"
-flask db upgrade
+# This step is REQUIRED before any database operations
+# macOS: 
+brew services start postgresql
+# Ubuntu: 
+sudo systemctl start postgresql
+# Windows (with PostgreSQL installed):
+# Open Services application and start PostgreSQL service
 ```
 
-6. **Populate with sample data (optional)**
+6. **Set up the database**
+
+```bash
+# Install PostgreSQL if not already installed
+# macOS: brew install postgresql
+# Ubuntu: sudo apt install postgresql postgresql-contrib
+
+# Create database and user
+createdb ytsp
+psql postgres -c "CREATE USER ytsp_server WITH PASSWORD 'secure_password';"
+psql postgres -c "GRANT ALL PRIVILEGES ON DATABASE ytsp TO ytsp_server;"
+
+# Or using psql directly
+psql postgres
+> CREATE DATABASE ytsp;
+> CREATE USER ytsp_server WITH PASSWORD 'secure_password';
+> GRANT ALL PRIVILEGES ON DATABASE ytsp TO ytsp_server;
+> \q
+
+# Update your .env file with PostgreSQL connection string
+# DATABASE_URL=postgresql://ytsp_server:secure_password@localhost:5432/ytsp
+```
+
+7. **Initialize the database**
+```bash
+# Initialize Flask migrations (only needed once for a new project)
+flask db init
+
+# Apply migrations
+flask db upgrade
+# OR use the database manager
+python db_tools/db_manager.py --migrate
+
+# Verify database connection
+python db_tools/db_manager.py --verify
+```
+
+8. **Populate with sample data (optional)**
 ```bash
 # After database migrations have been applied
-python reset_seed_db.py
+python db_tools/db_manager.py --seed
+# OR reset and seed in one command
+python db_tools/db_manager.py --reset-seed
 ```
 
-7. **Run the application**
+9. **Run the application**
 ```bash
 flask run
 # or
 python run.py
 ```
 
-8. **Access the application at http://localhost:5000**
+10. **Access the application at http://localhost:5000**
+
+### Verifying Your Setup
+
+To ensure everything is working correctly:
+
+1. **Check database connection and information**:
+```bash
+python db_tools/db_manager.py --all
+```
+
+2. **Access the application** and verify you can:
+   - Register a new user
+   - Log in
+   - View stocks
+   - Make transactions
+   - Access social features
 
 ---
 
@@ -306,9 +367,62 @@ flask db upgrade
 
 ---
 
-## Testing
+## Database Utilities
 
-Comprehensive testing is currently under development. It is expected to be added in the final version.
+YTSP provides a single all-in-one database management utility located in `db_tools/db_manager.py`:
+
+```bash
+# Verify database connection (default if no arguments provided)
+python db_tools/db_manager.py --verify
+
+# Get database information
+python db_tools/db_manager.py --info
+
+# Test model operations
+python db_tools/db_manager.py --test
+
+# Run all verification checks
+python db_tools/db_manager.py --all
+
+# Database migrations (alternative to flask db upgrade)
+python db_tools/db_manager.py --migrate
+
+# PostgreSQL maintenance
+python db_tools/db_manager.py --vacuum --analyze
+
+# Database reset and seed operations
+python db_tools/db_manager.py --reset        # Drop and recreate all tables
+python db_tools/db_manager.py --seed         # Populate with sample data
+python db_tools/db_manager.py --reset-seed   # Reset and seed in one operation
+python db_tools/db_manager.py --reset-seed -y # Skip confirmation prompts
+```
+
+For database backups and restores:
+
+```bash
+# Create a timestamped backup of your PostgreSQL database
+./db_tools/backup_db.sh
+
+# Restore from a backup file
+psql -U ytsp_server -d ytsp < ./backups/ytsp_backup_YYYYMMDD_HHMMSS.sql
+```
+
+The backup script:
+- Automatically extracts database connection information from your `.env` file
+- Creates timestamped SQL dump files in the `backups/` directory
+- Works with PostgreSQL databases
+- Provides detailed feedback on backup size and success status
+
+To restore a database:
+- Use the standard PostgreSQL `psql` command as shown above
+- Replace the filename with your actual backup file's name
+- Make sure the target database exists before restoring
+- The restore will replace all data in the target database
+
+4. **Database Reset**
+   - Use the reset script which will recreate all tables: `python db_tools/db_manager.py --reset`
+   - Reset and seed in one operation: `python db_tools/db_manager.py --reset-seed`
+
 ---
 
 ## Troubleshooting
@@ -332,8 +446,30 @@ If the AI trading assistant isn't working:
 
 #### Database Errors
 If you encounter database issues:
-1. Ensure migrations are up to date: `flask db upgrade`
-2. If database is corrupted, reset it: `python reset_seed_db.py` (This will recreate ytsp.db in the instance directory)
+
+1. **PostgreSQL Service Issues**
+   - Make sure PostgreSQL service is running:
+     - macOS: `brew services list` to check, `brew services start postgresql` to start
+     - Ubuntu: `sudo systemctl status postgresql` to check, `sudo systemctl start postgresql` to start
+   - If you see "Connection refused" errors, this is usually because the PostgreSQL service isn't running
+
+2. **Migration Issues**
+   - Ensure migrations are up to date: `flask db upgrade`
+   - If there are conflicts: `flask db stamp head` then `flask db migrate`
+   - Alternative: Use the database manager: `python db_tools/db_manager.py --migrate`
+
+3. **Connection Issues**
+   - Connection errors: Check that PostgreSQL service is running
+   - Permission issues: Verify user has proper permissions on database
+   - Use the verification tool: `python db_tools/db_manager.py --verify`
+
+4. **Database Reset**
+   - Use the reset script which will recreate all tables: `python db_tools/db_manager.py --reset`
+   - Reset and seed in one operation: `python db_tools/db_manager.py --reset-seed`
+
+5. **Performance Issues**
+   - Slow queries may indicate missing indexes
+   - Run maintenance: `python db_tools/db_manager.py --vacuum --analyze`
 
 #### Authentication Problems
 If you can't log in:
@@ -358,7 +494,6 @@ If you can't log in:
 - Yuntian Liu, PhD student in Biomedical informatics and data science department at Yale University
 - Karen Dorantes, Undergrad Student in Computer Science at Yale University
 - David Rodriguez, Undergrad Student in Computer Science at Yale University
-- 
 
 ---
 
