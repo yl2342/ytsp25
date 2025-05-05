@@ -29,7 +29,7 @@ venv/
 env/
 ENV/
 
-# environment var
+# environment variables
 .env
 
 # database
