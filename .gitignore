@@ -29,6 +29,9 @@ venv/
 env/
 ENV/
 
+# environment variables
+.env
+
 # database
 *.db
 
