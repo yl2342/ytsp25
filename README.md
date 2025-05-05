@@ -180,7 +180,7 @@ We use a basic paid plan for the server and the database is in the same environm
 
 ---
 
-## LocalServer Setup Instructions
+## Local Server Setup Instructions
 
 ### Prerequisites
 - Python 3.8 or higher
