@@ -1,6 +1,6 @@
 # Yale Trading Simulation Platform (YTSP) 
 
-A Robinhood-like full-stack web application for Yale students to simulate stock investments, manage financial portfolios, and interact with a community of peers.
+A full-stack web application for Yale students to simulate stock investments, manage financial portfolios, and interact with a community of peers.
 
 --- 
 <div align="center">
@@ -31,9 +31,9 @@ A Robinhood-like full-stack web application for Yale students to simulate stock 
 
 ## Project Status
 
-**Current Version: Beta Version II**
+**Current Version: Final Version**
 
-This is the beta version of the platform with core trading functionality and AI-assisted features. The application is fully functional with user authentication, trading capabilities, portfolio management, augmented social features, and AI trading advice.
+This is the final version of the platform with core trading functionality and AI-assisted features. The application is fully functional with user authentication, trading capabilities, portfolio management, augmented social features, and AI trading advice.
 
 ### Roadmap
 
@@ -41,7 +41,7 @@ This is the beta version of the platform with core trading functionality and AI-
 * **April 9**: Alpha Version: Enhanced UI/UX and expanded community feature (like/dislike posts) ✅
 * **April 18 2024**: Beta Version: Implement Yale CAS authentication, polish UI/UX with avator added, add enhanced interactive price trend chart over different time intervals ✅
 * **April 23 2024**: Beta Version II : Add AI-Assisted Trading Advice integration (structured prompt for gemini-2.0-flash grounding by real-time google search)✅
-* **May 3 2024**: Final Version:  Finalize UI/UX design, comprehensive testing, documentation, and deployment
+* **May 4 2024**: Final Version:  Finalize UI/UX design, comprehensive testing, documentation, and deployment ✅
 
 ---
 
@@ -171,9 +171,16 @@ ytsp/
 └── README.md               # This file
 ```
 
+--- 
+## Render deployment
+
+YSTP has been deployed on Render. You can access the application at https://ytsp.onrender.com . 
+We use a basic paid plan for the server and the database is in the same environment. The server and database could be terminated from time to time based on the limit and inactivity. So loss of user data can be expected, and you might start from scratch and be the only app user when accessing the app from this link. We will try to keep the app running as long as possible and improve it by hosting the database separately in the future.
+
+
 ---
 
-## Server Setup Instructions
+## LocalServer Setup Instructions
 
 ### Prerequisites
 - Python 3.8 or higher
@@ -260,11 +267,11 @@ python run.py
    - Visit your portfolio dashboard for an overview
    - Click on individual holdings for detailed performance
 
-### Using AI-Assisted Trading
+### Using AI-Assisted Trading (Make sure you have made a trade first so that agent can have your trading history to generate the prompt)
 1. Search for a stock and navigate to its detail page
 2. Enter the quantity you wish to buy/sell
 3. Click the "Need AI assist for this trade?" button
-4. In the modal window, click "Generate and review your prompt first"
+4. In the pop-up window, click "Generate and review your prompt first"
 5. Review the generated prompt (which includes your portfolio data and trade details)
 6. Edit the prompt if desired - it's fully customizable!
 7. Click "Confirm my prompt for AI advice" like you send your prompt to your other AI friends (eg. chatgpt)
@@ -358,7 +365,7 @@ If you can't log in:
 - Yuntian Liu, PhD student in Biomedical informatics and data science department at Yale University
 - Karen Dorantes, Undergrad Student in Computer Science at Yale University
 - David Rodriguez, Undergrad Student in Computer Science at Yale University
-- 
+- Zhiyuan Cao, PhD student in Biomedical informatics and data science department at Yale University
 
 ---
 
