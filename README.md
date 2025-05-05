@@ -1,6 +1,6 @@
 # Yale Trading Simulation Platform (YTSP) 
 
-A full-stack web application for Yale students to simulate stock investments, manage financial portfolios, and interact with a community of peers.
+A full-stack web application for Yale students to simulate stock investments, manage financial portfolios, and interact with a community of peers. This application also includes a large language model (LLM) embedded within it to provide AI-driven investing advice.
 
 --- 
 <div align="center">
@@ -47,6 +47,7 @@ This is the beta version of the platform with core trading functionality and AI-
 
 ## Table of Contents
 - [Features](#features)
+- [Most Interesting Feature](#most-interesting-feature)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [Setup Instructions](#setup-instructions)
@@ -109,6 +110,12 @@ This is the beta version of the platform with core trading functionality and AI-
   - Specific recommendations for your proposed trade
   - Alternative trading strategies to consider
   - Potential risks and opportunities
+
+---
+## Most Interesting Feature
+
+### AI-Assisted Trading Advice
+Our team is most proud of our AI-assisted trading advice. While it was not the most difficult aspect of creating our program, we believe that receiving AI assistance based on previous trading patterns, current market news, and the current performance of the stock is quite innovative. When compared to the old-school way of determining if you should invest in a particular stock, we see that using AI to help in this determination can help take into account historical trends but more importantly, recent news that the user may not have been aware of and therefore help the user make a much more informed decision. Additionally, because our AI assistant provides recommendations on other stocks, a user is able to quickly find options to strengthen their trading portfolio.
 
 ---
 
