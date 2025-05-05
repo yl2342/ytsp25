@@ -501,10 +501,10 @@ If you can't log in:
 ## Team
 
 ### Project Authors
-- Yuntian Liu, PhD student in Biomedical informatics and data science department at Yale University
+- Yuntian Liu, PhD student in Biomedical informatics and Data Science department at Yale University
 - Karen Dorantes, Undergrad Student in Computer Science at Yale University
 - David Rodriguez, Undergrad Student in Computer Science at Yale University
-- Zhiyuan Cao, PhD student in Biomedical informatics and data science department at Yale University
+- Zhiyuan Cao, PhD student in Biomedical informatics and Data Science department at Yale University
 
 ---
 
