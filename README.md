@@ -247,6 +247,16 @@ sudo systemctl start postgresql
 # macOS: brew install postgresql
 # Ubuntu: sudo apt install postgresql postgresql-contrib
 
+# Connect as the postgres superuser
+psql -U postgres
+
+# Create a new role with name of OS user
+CREATE ROLE user LOGIN PASSWORD 'PASSWORD';
+ALTER ROLE user CREATEDB;
+
+# Exit
+\q
+
 # Method 1: Use the database setup script (recommended)
 python db_tools/db_manager.py --setup
 # Or skip confirmation with:
