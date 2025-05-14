@@ -185,8 +185,7 @@ ytsp/
 
 ## Render deployment
 
-
-YSTP has been deployed on Render. You can access the application at https://ytsp25.onrender.com. 
+Instead of directly deploying the app using the course-assigned github classroom repo, we deployed the app on Render in an identical personal public github repo (https://github.com/yl2342/ytsp25) for the ease of deployment and maintenance. You can access the application at https://ytsp25.onrender.com. 
 We use a basic paid plan for hosting the server and PostgreSQL database on Render. This serves as the online version of the application, and the database instance is independent and not shared with the local implementation.The server and database could be terminated for long periods of inactivity. Contact us if this deployment is not working.
 
 ---
