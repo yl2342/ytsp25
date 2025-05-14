@@ -8,9 +8,6 @@ from functools import lru_cache
 
 logger = logging.getLogger(__name__)
 
-# Keep the Alpha Vantage API key for potential future use
-ALPHA_VANTAGE_API_KEY = os.environ.get('STOCK_API_KEY')
-
 # Simple in-memory cache for stock data
 _stock_cache = {}
 _cache_expiry = 60 * 5  # Cache expiry in seconds (5 minutes)

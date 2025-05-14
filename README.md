@@ -232,49 +232,27 @@ cp .env.example .env
 5. **Start the PostgreSQL service**
 ```bash
 # This step is REQUIRED before any database operations
+# Install PostgreSQL if not already installed
+# macOS: brew install postgresql 
+
 # macOS: 
 brew services start postgresql
-# Ubuntu: 
-sudo systemctl start postgresql
 # Windows (with PostgreSQL installed):
 # Open Services application and start PostgreSQL service
 ```
 
 6. **Set up the database**
+The setup function in the sctipt db_manager.py will do the following (refer to the setup_db.sql for the SQL commands):
+- First drop the existing database and user if they exist, then create a new database named `ytsp` and user `ytsp_server` with the given password `cpsc519sp25`. 
+- It will also grant all privileges to the user on the database and the schema.
+After the setup, make sure to update the .env file with PostgreSQL connection string `DATABASE_URL=postgresql://ytsp_server:cpsc519sp25@localhost:5432/ytsp`
 
 ```bash
-# Install PostgreSQL if not already installed
-# macOS: brew install postgresql
-# Ubuntu: sudo apt install postgresql postgresql-contrib
-
-# Connect as the postgres superuser
-psql -U postgres
-
-# Create a new role with name of OS user
-CREATE ROLE user LOGIN PASSWORD 'PASSWORD';
-ALTER ROLE user CREATEDB;
-
-# Exit
-\q
 
 # Method 1: Use the database setup script (recommended)
 python db_tools/db_manager.py --setup
 # Or skip confirmation with:
 python db_tools/db_manager.py --setup -y
-
-# Method 2: Manual setup with individual commands
-# Check if database exists and drop it if it does
-psql postgres -c "DROP DATABASE IF EXISTS ytsp;"
-# Check if user exists and drop it if it does
-psql postgres -c "DROP USER IF EXISTS ytsp_server;"
-# Create fresh database and user
-psql postgres -c "CREATE USER ytsp_server WITH PASSWORD 'cpsc519sp25';"
-psql postgres -c "CREATE DATABASE ytsp;"
-psql postgres -c "GRANT ALL PRIVILEGES ON DATABASE ytsp TO ytsp_server;"
-psql postgres -c "GRANT ALL ON SCHEMA public TO ytsp_server;"
-
-# Method 3: Manual setup using the SQL script directly
-psql postgres -f db_tools/setup_db.sql
 
 # After setup, update your .env file with PostgreSQL connection string
 # DATABASE_URL=postgresql://ytsp_server:cpsc519sp25@localhost:5432/ytsp
@@ -284,12 +262,8 @@ psql postgres -f db_tools/setup_db.sql
 ```bash
 # Initialize Flask migrations (only needed once for a new project)
 flask db init
-
 # Apply migrations
-flask db upgrade
-# OR use the database manager
-python db_tools/db_manager.py --migrate
-
+flask db upgrade # OR use the database manager: python db_tools/db_manager.py --migrate
 # Verify database connection
 python db_tools/db_manager.py --verify
 ```
@@ -301,7 +275,7 @@ flask run
 python run.py
 ```
 
-10. **Access the application at http://localhost:5000**
+10. **Access the application at http://localhost:5000 or http://127.0.0.1:5000**
 
 ### Verifying Your Setup
 
