@@ -42,6 +42,7 @@ This is the final version of the platform with core trading functionality and AI
 * **April 18 2024**: Beta Version: Implement Yale CAS authentication, polish UI/UX with avator added, add enhanced interactive price trend chart over different time intervals ✅
 * **April 23 2024**: Beta Version II : Add AI-Assisted Trading Advice integration (structured prompt for gemini-2.0-flash grounding by real-time google search)✅
 * **May 4 2024**: Final Version:  Finalize UI/UX design, comprehensive testing, documentation, and deployment ✅
+* **May 14 2025**: Final Version II: Complete PostgreSQL implementation and deployment on Render ✅
 
 ---
 
@@ -145,7 +146,6 @@ Our team is most proud of our AI-assisted trading advice. While it was not the m
 ---
 
 ## Project Structure
-
 ```
 ytsp/
 ├── app/                    # Main application package
@@ -173,27 +173,33 @@ ytsp/
 ├── venv/                   # Virtual environment
 ├── .env                    # Environment variables (includes GEMINI_API_KEY)
 ├── .env.example            # Example environment file
+├── .gitignore              # Git ignore file
+├── Procfile                # Render deployment file
+├── build.sh                # Build script for Render
 ├── requirements.txt        # Python dependencies
 ├── run.py                  # Application entry point
 └── README.md               # This file
 ```
 
 --- 
+
 ## Render deployment
 
-YSTP has been deployed on Render. You can access the application at https://ytsp.onrender.com . 
-We use a basic paid plan for the server and the database is in the same environment. The server and database could be terminated from time to time based on the limit and inactivity. So loss of user data can be expected, and you might start from scratch and be the only app user when accessing the app from this link. We will try to keep the app running as long as possible and improve it by hosting the database separately in the future.
 
+YSTP has been deployed on Render. You can access the application at https://ytsp25.onrender.com. 
+We use a basic paid plan for hosting the server and PostgreSQL database on Render. This serves as the online version of the application, and the database instance is independent and not shared with the local implementation.The server and database could be terminated for long periods of inactivity. Contact us if this deployment is not working.
 
 ---
 
 ## Local Server Setup Instructions
 
+You can also set up and host your own local server and run the application by following the instructions below. Your local server and database will be independent and non-interfering from the online deployment.
+
 ### Prerequisites
-- Python 3.8 or higher
+- Python 3.8 or higher, but not higher than 3.12 (for the adaptabilityity of the psycopg2-binary), preferably 3.11
 - Git
-- PostgreSQL 12 or higher
-- Internet connection for API access
+- PostgreSQL 12 or higher, preferably 16
+- Internet connectionon for API access
 - Google Gemini API key (for AI-assisted trading features)
 
 ### Installation
@@ -222,6 +228,7 @@ pip install -r requirements.txt
   - RPM (requests per minute) is 15
   - TPM (tokens per minute) is 1,000,000
   - RPD (requests per day) is 1,500
+
 ```bash
 cp .env.example .env
 # Edit .env with your configuration
@@ -249,7 +256,7 @@ After the setup, make sure to update the .env file with PostgreSQL connection st
 
 ```bash
 
-# Method 1: Use the database setup script (recommended)
+# Use the database setup script 
 python db_tools/db_manager.py --setup
 # Or skip confirmation with:
 python db_tools/db_manager.py --setup -y
@@ -283,15 +290,22 @@ To ensure everything is working correctly:
 
 1. **Check database connection and information**:
 ```bash
-python db_tools/db_manager.py --all
+python db_tools/db_manager.py --verify
 ```
 
 2. **Access the application** and verify you can:
    - Register a new user
    - Log in
-   - View stocks
+   - Deposit funds
+   - View stocks details
    - Make transactions
    - Access social features
+     - Follow other users (search for users by netid: eg. yl2342 )
+     - View trading posts
+     - Comment on posts
+     - Like/dislike posts
+   - Use AI-assisted trading advice
+  
 
 ---
 
@@ -305,26 +319,26 @@ python db_tools/db_manager.py --all
 ### Managing Your Portfolio
 1. After logging in, you'll be directed to your dashboard
 2. New users will be granted 1,000 virtual dollars to start with
-3. To add funds: Go to "Account" → "Deposit Funds"
+3. To add funds: Go to "Account" -> "Deposit Funds"
 4. To buy stocks:
    - Use the search bar to find a stock by ticker symbol
    - Click on the stock to view details
-   - Enter the quantity and click "Buy" (You can only trade whole shares)
+   - Enter/Tune the quantity and click "Buy" (You can only trade whole shares)
 5. To sell stocks:
-   - Go to "Portfolio" → "Holdings"
-   - Find the stock you want to sell
+   - Go to "Portfolio" -> "Holdings"
+   - Find and click on the stock you want to sell
    - Enter the quantity and click "Sell"
 6. To view performance:
    - Visit your portfolio dashboard for an overview
    - Click on individual holdings for detailed performance
 
-### Using AI-Assisted Trading (Make sure you have made a trade first so that agent can have your trading history to generate the prompt)
+### Using AI-Assisted Trading 
 1. Search for a stock and navigate to its detail page
 2. Enter the quantity you wish to buy/sell
 3. Click the "Need AI assist for this trade?" button
 4. In the pop-up window, click "Generate and review your prompt first"
 5. Review the generated prompt (which includes your portfolio data and trade details)
-6. Edit the prompt if desired - it's fully customizable!
+6. Edit the prompt if desired - it's fully customizable
 7. Click "Confirm my prompt for AI advice" like you send your prompt to your other AI friends (eg. chatgpt)
 8. Review the AI's detailed analysis and recommendations in the new window
 9. Click "Confirm" to add the AI advice to your trading page, or "Close" to dismissss it
@@ -333,7 +347,7 @@ python db_tools/db_manager.py --all
 
 ### Social Features
 1. To follow other users:
-   - Search for users by their netid in the "Social" tab
+   - Search for users by their netid in the "Social" tab (You can search for the author's netid `yl2342` for testing purposes)
    - Visit their profile and click "Follow"
 2. To share a trade:
    - Complete a buy/sell transaction
@@ -366,7 +380,7 @@ flask db upgrade
 
 ## Database Utilities
 
-YTSP provides a single all-in-one database management utility located in `db_tools/db_manager.py`:
+We provide a single all-in-one database management utility located in `db_tools/db_manager.py`:
 
 ```bash
 # Verify database connection (default if no arguments provided)
@@ -384,8 +398,6 @@ python db_tools/db_manager.py --all
 # Database migrations (alternative to flask db upgrade)
 python db_tools/db_manager.py --migrate
 
-# PostgreSQL maintenance
-python db_tools/db_manager.py --vacuum --analyze
 
 # Database setup and reset operations
 python db_tools/db_manager.py --setup       # Create database and user from SQL script
@@ -406,17 +418,13 @@ psql -U ytsp_server -d ytsp < ./backups/ytsp_backup_YYYYMMDD_HHMMSS.sql
 The backup script:
 - Automatically extracts database connection information from your `.env` file
 - Creates timestamped SQL dump files in the `backups/` directory
-- Works with PostgreSQL databases
 - Provides detailed feedback on backup size and success status
 
 To restore a database:
-- Use the standard PostgreSQL `psql` command as shown above
+- Use the standard PostgreSQL `psql` command as shown: `psql -U ytsp_server -d ytsp < ./backups/ytsp_backup_YYYYMMDD_HHMMSS.sql`
 - Replace the filename with your actual backup file's name
 - Make sure the target database exists before restoring
 - The restore will replace all data in the target database
-
-4. **Database Reset**
-   - Use the reset script which will recreate all tables: `python db_tools/db_manager.py --reset`
 
 ---
 
@@ -427,7 +435,7 @@ To restore a database:
 #### API Connection Problems
 If stock data isn't loading:
 1. Check your internet connection
-2. Verify that the Yahoo Finance API is accessible
+2. Verify that the Yahoo Finance API is accessible (Recent version can have false rate limit warnings/errors, check the official github issues [here](https://github.com/ranaroussi/yfinance/blob/main/CHANGELOG.rst) and logs [here](https://github.com/ranaroussi/yfinance/blob/main/CHANGELOG.rst) for more information)
 3. Try searching for a popular ticker (AAPL, MSFT)
 4. Check application logs for errors
 
