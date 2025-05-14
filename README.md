@@ -468,9 +468,6 @@ If you encounter database issues:
 4. **Database Reset**
    - Use the reset script which will recreate all tables: `python db_tools/db_manager.py --reset`
 
-5. **Performance Issues**
-   - Slow queries may indicate missing indexes
-   - Run maintenance: `python db_tools/db_manager.py --vacuum --analyze`
 
 #### Authentication Problems
 If you can't log in:
